@@ -1,0 +1,169 @@
+:root {
+    --font-display: 'Playfair Display', serif;
+    --font-body: 'DM Sans', sans-serif;
+}
+
+body {
+    font-family: var(--font-body);
+    background: #F7F5F0;
+    color: #1a1a18;
+}
+
+.font-display {
+    font-family: var(--font-display);
+}
+
+/* Hero background */
+.hero-bg {
+    background: #1a1a18;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-bg::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse 60% 50% at 70% 40%, rgba(212,163,80,0.18) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 60% at 20% 80%, rgba(93,202,165,0.10) 0%, transparent 60%);
+}
+
+/* Search bar */
+.search-bar {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.15);
+    backdrop-filter: blur(12px);
+    border-radius: 999px;
+    transition: border-color 0.2s;
+}
+
+.search-bar:focus-within {
+    border-color: rgba(212,163,80,0.6);
+}
+
+.search-btn {
+    background: #D4A350;
+    border-radius: 999px;
+    color: #1a1a18;
+    font-weight: 500;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.search-btn:hover {
+    background: #e8b85c;
+    transform: scale(1.02);
+}
+
+/* Category cards */
+.category-card {
+    background: #fff;
+    border: 1px solid #E8E5DF;
+    border-radius: 16px;
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    cursor: pointer;
+}
+
+.category-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.10);
+    border-color: #D4A350;
+}
+
+/* Activity cards */
+.activity-card {
+    background: #fff;
+    border: 1px solid #E8E5DF;
+    border-radius: 20px;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.activity-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.12);
+}
+
+/* AI badge */
+.ai-badge {
+    background: rgba(212,163,80,0.15);
+    border: 1px solid rgba(212,163,80,0.4);
+    color: #a07828;
+    border-radius: 999px;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    padding: 3px 10px;
+    font-weight: 500;
+}
+
+/* How it works steps */
+.step-number {
+    width: 48px;
+    height: 48px;
+    background: #1a1a18;
+    color: #D4A350;
+    font-family: var(--font-display);
+    font-size: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* Nav */
+nav {
+    background: #1a1a18;
+}
+
+.nav-link {
+    color: rgba(255,255,255,0.65);
+    font-size: 14px;
+    font-weight: 400;
+    transition: color 0.15s;
+}
+
+.nav-link:hover {
+    color: #fff;
+}
+
+/* CTA section */
+.cta-section {
+    background: #1a1a18;
+    border-radius: 28px;
+    overflow: hidden;
+    position: relative;
+}
+
+.cta-section::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 50% 80% at 80% 50%, rgba(212,163,80,0.15) 0%, transparent 70%);
+}
+
+/* Pill tags */
+.pill {
+    background: #F0EDE6;
+    color: #5a5751;
+    border-radius: 999px;
+    font-size: 12px;
+    padding: 4px 12px;
+    font-weight: 400;
+}
+
+/* Activity image placeholder */
+.img-placeholder {
+    width: 100%;
+    height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+}
+
+/* Stars */
+.stars {
+    color: #D4A350;
+}
+
