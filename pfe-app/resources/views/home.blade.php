@@ -25,11 +25,12 @@
                 <a href="#" class="nav-link">How it works</a>
             </div>
             <div class="flex items-center gap-3">
-                <a href=""
+                <a href="{{ route('login') }}"
                     class="nav-link px-4 py-2 rounded-full border border-white/20 hover:border-white/50 transition-colors text-sm">
-                    Log in
+                    Login
                 </a>
-                <a href="" class="search-btn px-4 py-2 text-sm font-medium rounded-full inline-block">
+                <a href="{{ route('register') }}"
+                  class="search-btn px-4 py-2 text-sm font-medium rounded-full inline-block">
                     Sign up
                 </a>
             </div>
