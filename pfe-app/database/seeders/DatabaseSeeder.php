@@ -12,10 +12,13 @@ class DatabaseSeeder extends Seeder
 
     public function run(): void
     {
-        // Keep default scaffold seeders minimal.
-        // (Factories can be used later when we add real models.)
-        // User::factory(10)->create();
-        // User::factory()->create([...]);
+        $this->call([
+            UserSeeder::class,
+            CenterSeeder::class,
+            CategorySeeder::class,
+            ActivitySeeder::class,
+            ScheduleSeeder::class,
+        ]);
     }
 }
 

@@ -1,0 +1,60 @@
+.hero-bg {
+    background: #1a1a18;
+    position: relative;
+    overflow: hidden;
+}
+.hero-bg::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(
+            ellipse 60% 50% at 70% 40%,
+            rgba(212, 163, 80, 0.18) 0%,
+            transparent 70%
+        ),
+        radial-gradient(
+            ellipse 40% 60% at 20% 80%,
+            rgba(93, 202, 165, 0.1) 0%,
+            transparent 60%
+        );
+}
+.search-bar {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(12px);
+    border-radius: 999px;
+    transition: border-color 0.2s;
+}
+.search-bar:focus-within {
+    border-color: rgba(212, 163, 80, 0.6);
+}
+.step-number {
+    width: 48px;
+    height: 48px;
+    background: #1a1a18;
+    color: #d4a350;
+    font-family: var(--font-display);
+    font-size: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.cta-section {
+    background: #1a1a18;
+    border-radius: 28px;
+    overflow: hidden;
+    position: relative;
+}
+.cta-section::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+        ellipse 50% 80% at 80% 50%,
+        rgba(212, 163, 80, 0.15) 0%,
+        transparent 70%
+    );
+}

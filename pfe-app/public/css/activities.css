@@ -1,0 +1,101 @@
+.page-header {
+    background: #1a1a18;
+    padding: 48px 24px;
+    position: relative;
+    overflow: hidden;
+}
+.page-header::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+        ellipse 50% 80% at 80% 50%,
+        rgba(212, 163, 80, 0.12) 0%,
+        transparent 70%
+    );
+}
+.filter-card {
+    background: #fff;
+    border: 1px solid #e8e5df;
+    border-radius: 16px;
+    padding: 24px;
+}
+.filter-label {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #a09890;
+    margin-bottom: 12px;
+    display: block;
+}
+.filter-input {
+    width: 100%;
+    border: 1px solid #e8e5df;
+    border-radius: 10px;
+    padding: 9px 14px;
+    font-size: 13px;
+    color: #1a1a18;
+    background: #fafaf8;
+    outline: none;
+    transition: border-color 0.2s;
+    font-family: "DM Sans", sans-serif;
+}
+.filter-input:focus {
+    border-color: #d4a350;
+}
+.category-pill {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 999px;
+    border: 1px solid #e8e5df;
+    font-size: 12px;
+    color: #5a5751;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: #fff;
+    text-decoration: none;
+}
+.category-pill:hover,
+.category-pill.active {
+    background: #1a1a18;
+    border-color: #1a1a18;
+    color: #fff;
+}
+.category-pill.active {
+    background: #d4a350;
+    border-color: #d4a350;
+    color: #1a1a18;
+}
+.no-results {
+    text-align: center;
+    padding: 80px 20px;
+    color: #a09890;
+}
+.bg-martial {
+    background: #2a1f3d;
+}
+.bg-boxing {
+    background: #2f1a1a;
+}
+.bg-arts {
+    background: #1a2030;
+}
+.bg-swimming {
+    background: #1a2a35;
+}
+.bg-pilates {
+    background: #1a2f2a;
+}
+.bg-fitness {
+    background: #2a2a1a;
+}
+.bg-outdoor {
+    background: #1a2a1a;
+}
+.bg-football {
+    background: #1a2820;
+}
+.bg-default {
+    background: #2a2520;
+}

@@ -1,0 +1,91 @@
+/* Nav */
+nav {
+    background: #1a1a18;
+}
+.nav-link {
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 14px;
+    font-weight: 400;
+    transition: color 0.15s;
+}
+.nav-link:hover {
+    color: #fff;
+}
+
+/* Buttons */
+.search-btn {
+    background: #d4a350;
+    border-radius: 999px;
+    color: #1a1a18;
+    font-weight: 500;
+    transition:
+        background 0.2s,
+        transform 0.1s;
+}
+.search-btn:hover {
+    background: #e8b85c;
+    transform: scale(1.02);
+}
+
+/* Activity card */
+.activity-card {
+    background: #fff;
+    border: 1px solid #e8e5df;
+    border-radius: 20px;
+    overflow: hidden;
+    transition:
+        transform 0.2s,
+        box-shadow 0.2s;
+}
+.activity-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+}
+
+/* Category card */
+.category-card {
+    background: #fff;
+    border: 1px solid #e8e5df;
+    border-radius: 16px;
+    transition:
+        transform 0.2s,
+        box-shadow 0.2s,
+        border-color 0.2s;
+    cursor: pointer;
+}
+.category-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+    border-color: #d4a350;
+}
+
+/* Shared components */
+.ai-badge {
+    background: rgba(212, 163, 80, 0.15);
+    border: 1px solid rgba(212, 163, 80, 0.4);
+    color: #a07828;
+    border-radius: 999px;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    padding: 3px 10px;
+    font-weight: 500;
+}
+.pill {
+    background: #f0ede6;
+    color: #5a5751;
+    border-radius: 999px;
+    font-size: 12px;
+    padding: 4px 12px;
+    font-weight: 400;
+}
+.stars {
+    color: #d4a350;
+}
+.img-placeholder {
+    width: 100%;
+    height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+}
