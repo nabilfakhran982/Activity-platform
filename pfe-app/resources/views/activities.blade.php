@@ -1,6 +1,6 @@
 <x-layouts.app-main title="Browse Activities">
 
-    {{-- CSS --}}
+    {{-- Styles --}}
     @push('styles')
         <link rel="stylesheet" href="{{ asset('css/activities.css') }}">
     @endpush
@@ -17,10 +17,10 @@
 
     {{-- MAIN CONTENT --}}
     <div class="max-w-6xl mx-auto px-6 py-10">
-        <div class="flex gap-8 items-start">
+        <div class="flex flex-col lg:flex-row gap-8 items-start">
 
             {{-- FILTERS SIDEBAR --}}
-            <aside class="w-64 flex-shrink-0 sticky top-20">
+            <aside class="w-full lg:w-64 flex-shrink-0 lg:sticky top-20">
                 <form method="GET" action="{{ route('activities') }}">
                     <div class="filter-card space-y-6">
 
@@ -86,7 +86,7 @@
             </aside>
 
             {{-- ACTIVITIES GRID --}}
-            <div class="flex-1">
+            <div class="flex-1 w-full">
                 @if($activities->isEmpty())
                     <div class="no-results">
                         <div class="text-5xl mb-4">🔍</div>
@@ -105,25 +105,27 @@
         </div>
     </div>
 
-    {{-- JavaScript --}}
-    <script>
-        document.querySelector('form').addEventListener('submit', function (e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-            const params = new URLSearchParams();
+    {{-- Scripts --}}
+    @push('scripts')
+        <script>
+            document.querySelector('form').addEventListener('submit', function (e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+                const params = new URLSearchParams();
 
-            for (const [key, value] of formData.entries()) {
-                if (value.trim() !== '') {
-                    params.append(key, value);
+                for (const [key, value] of formData.entries()) {
+                    if (value.trim() !== '') {
+                        params.append(key, value);
+                    }
                 }
+
+                window.location.href = '{{ route('activities') }}' + (params.toString() ? '?' + params.toString() : '');
+            });
+
+            function setCategory(slug) {
+                document.getElementById('category-input').value = slug;
+                document.forms[0].dispatchEvent(new Event('submit'));
             }
-
-            window.location.href = '{{ route('activities') }}' + (params.toString() ? '?' + params.toString() : '');
-        });
-
-        function setCategory(slug) {
-            document.getElementById('category-input').value = slug;
-            document.forms[0].dispatchEvent(new Event('submit'));
-        }
-    </script>
+        </script>
+    @endpush
 </x-layouts.app-main>

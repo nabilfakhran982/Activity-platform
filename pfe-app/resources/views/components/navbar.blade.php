@@ -5,7 +5,7 @@
         </a>
         <div class="hidden md:flex items-center gap-8">
             <a href="{{ route('activities') }}" class="nav-link">Browse Activities</a>
-            <a href="#" class="nav-link">For Centers</a>
+            <a href="{{ route('for-centers') }}" class="nav-link">For Centers</a>
             <a href="#" class="nav-link">How it works</a>
         </div>
         <div class="flex items-center gap-3">

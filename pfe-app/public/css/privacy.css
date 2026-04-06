@@ -1,0 +1,60 @@
+.privacy-hero {
+    background: #1a1a18;
+    padding: 80px 24px;
+    position: relative;
+    overflow: hidden;
+}
+
+.privacy-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse 60% 50% at 70% 40%, rgba(212,163,80,0.18) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 60% at 20% 80%, rgba(93,202,165,0.10) 0%, transparent 60%);
+}
+
+.section-label {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: rgba(212,163,80,0.8);
+    margin-bottom: 16px;
+}
+
+.privacy-card {
+    background: #fff;
+    border: 1px solid #E8E5DF;
+    border-radius: 20px;
+    padding: 48px;
+}
+
+.privacy-section {
+    margin-bottom: 32px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid #F0EDE6;
+}
+
+.privacy-section:last-of-type {
+    border-bottom: none;
+}
+
+.privacy-heading {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 700;
+    color: #1a1a18;
+    margin-bottom: 12px;
+}
+
+.privacy-text {
+    font-size: 14px;
+    color: #5a5751;
+    line-height: 1.8;
+}
+
+.privacy-contact {
+    text-align: center;
+    padding-top: 32px;
+}

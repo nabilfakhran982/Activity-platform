@@ -1,0 +1,79 @@
+.about-hero {
+    background: #1a1a18;
+    padding: 80px 24px;
+    position: relative;
+    overflow: hidden;
+}
+
+.about-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(
+            ellipse 60% 50% at 70% 40%,
+            rgba(212, 163, 80, 0.18) 0%,
+            transparent 70%
+        ),
+        radial-gradient(
+            ellipse 40% 60% at 20% 80%,
+            rgba(93, 202, 165, 0.1) 0%,
+            transparent 60%
+        );
+}
+
+.section-label {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: rgba(212, 163, 80, 0.8);
+    margin-bottom: 16px;
+}
+
+.about-card {
+    background: #fff;
+    border: 1px solid #e8e5df;
+    border-radius: 20px;
+    padding: 36px;
+}
+
+@media (max-width: 768px) {
+    .about-card {
+        text-align: center;
+    }
+}
+
+.about-feature {
+    background: #fff;
+    border: 1px solid #e8e5df;
+    border-radius: 16px;
+    padding: 28px;
+    transition:
+        transform 0.2s,
+        box-shadow 0.2s;
+}
+
+@media (max-width: 768px) {
+    .about-feature {
+        text-align: center;
+    }
+}
+
+.about-feature:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+}
+
+.feature-icon {
+    font-size: 32px;
+    margin-bottom: 16px;
+}
+
+.built-in-lebanon {
+    text-align: center;
+    background: #fff;
+    border: 1px solid #e8e5df;
+    border-radius: 20px;
+    padding: 48px;
+}

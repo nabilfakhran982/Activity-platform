@@ -1,0 +1,95 @@
+.contact-hero {
+    background: #1a1a18;
+    padding: 80px 24px;
+    position: relative;
+    overflow: hidden;
+}
+
+.contact-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse 60% 50% at 70% 40%, rgba(212,163,80,0.18) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 60% at 20% 80%, rgba(93,202,165,0.10) 0%, transparent 60%);
+}
+
+.section-label {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: rgba(212,163,80,0.8);
+    margin-bottom: 16px;
+}
+
+.contact-card {
+    background: #fff;
+    border: 1px solid #E8E5DF;
+    border-radius: 20px;
+    padding: 40px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #a09890;
+    margin-bottom: 8px;
+}
+
+.form-input {
+    width: 100%;
+    border: 1px solid #E8E5DF;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 14px;
+    color: #1a1a18;
+    background: #FAFAF8;
+    outline: none;
+    transition: border-color 0.2s;
+    font-family: 'DM Sans', sans-serif;
+    resize: none;
+}
+
+.form-input:focus {
+    border-color: #D4A350;
+}
+
+.input-error {
+    border-color: #e05252;
+}
+
+.error-msg {
+    color: #e05252;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+.success-banner {
+    background: rgba(93,202,165,0.12);
+    border: 1px solid rgba(93,202,165,0.4);
+    color: #2a7a5a;
+    border-radius: 12px;
+    padding: 16px 20px;
+    font-size: 14px;
+    position: relative;
+}
+
+.success-banner button {
+    background: transparent;
+    border: none;
+    font-size: 15px;
+    color: #2a7a5a;
+    cursor: pointer;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    right: 16px;
+}

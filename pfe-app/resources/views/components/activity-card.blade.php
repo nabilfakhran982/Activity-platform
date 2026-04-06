@@ -9,10 +9,12 @@
 
 <div class="activity-card">
     @if($image)
-        <img src="{{ asset($image->image_path) }}" alt="{{ $act->title }}" class="w-full object-cover" style="height:180px">
+        <div class="image-box">
+            <img src="{{ asset($image->image_path) }}" alt="{{ $act->title }}">
+        </div>
     @else
-        <div class="img-placeholder {{ $bg }}">
-            {{ $act->category->icon }}
+        <div class="image-box {{ $bg }}">
+            <span style="font-size:48px">{{ $act->category->icon }}</span>
         </div>
     @endif
 
