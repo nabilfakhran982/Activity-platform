@@ -661,7 +661,7 @@ $25/session
 بس للأنشطة 😄
 
 ---
-IMPOTANT=> user-id , schedulde-id , bnooking-id
+1-  IMPOTANT=> user-id , schedulde-id , bnooking-id
         ====>
         إذا قام المستخدم بحجز موعد الساعة الرابعة، ثم حاول أن يحجز نفس الموعد مرة أخرى في الساعة الرابعة بالضبط، فلن يُسمح له بذلك لأن القيد الفريد يمنع التكرار لنفس التاريخ والوقت.
 
@@ -672,4 +672,33 @@ IMPOTANT=> user-id , schedulde-id , bnooking-id
 
 
 
-impoortant==> Databaseseeder hiye btrbot sf7t code bl db
+2-  Impoortant==> Databaseseeder hiye btrbot sf7t code bl db
+
+
+3-  Guest ==> lma ykoun bl 7alten ma 3ml account 7a ybynn es 2 buttons(log in , sign up)
+          bi 7ale w7de bi byn un seul button( log out) 2eza ken 3eml login w fet 3a safht home w huwe deja  bl 7alten ma 3ml account aw momken ykon 3emelll
+
+
+4-  x-main ==>  2ana 7atet bi hl sf7a x-navbar w x-footer yale 2ana m3rfon bl components lal nav w  
+                foot  fa bl home ktbt x-main bhl tri2a rbta 2ana
+
+5-  B5sus 2sem safhaa mn fo2 ==> 2ana deja ktb bl main <title> w 2eyel 2eza ma fyt 3a shi sf7a ??    
+                                 "Home" 7a y2ele y3ne home 
+                                  la hk ma drure bi sf7t home 23ml title 
+
+
+6-  Filled ==> y3ne btshuf 2eza category mwjude aw l2
+              ex:dans le url on ecrit:
+              activities?category:1 w huwe mwjud fa by3tk detail
+
+7-  If , Else ==>  m 7tena l2n bi btl fine bl url 7ot 
+                   activities?category:1  & max aw 2aya shi 8r               
+
+8-  Page Browser ==> lama 3m ydawe 2asfar hyda bisabab 2eno rabtino bl style lal category              
+                    fa lma na2e bi dawe
+
+9- $qyery=Activities..(center,CATEGORY,..) ==> bl url knt 3m t5d id tb3 category fa                   
+                                               ftt 3a hl cat w 3ml slug (nom de cat) bdl id
+
+10- RESPONSIVE ==> hiye lama nsa8er website ydl mbyn  kl shkl mtl ma huwe
+

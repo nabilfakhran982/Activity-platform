@@ -2,12 +2,14 @@
 nav {
     background: #1a1a18;
 }
+
 .nav-link {
     color: rgba(255, 255, 255, 0.65);
     font-size: 14px;
     font-weight: 400;
     transition: color 0.15s;
 }
+
 .nav-link:hover {
     color: #fff;
 }
@@ -22,6 +24,7 @@ nav {
         background 0.2s,
         transform 0.1s;
 }
+
 .search-btn:hover {
     background: #e8b85c;
     transform: scale(1.02);
@@ -30,13 +33,15 @@ nav {
 /* Activity card */
 .activity-card {
     display: flex;
-    flex-direction: column; /* هيدا يخلي الصورة فوق والمحتوى تحت */
+    flex-direction: column;
+    /* هيدا يخلي الصورة فوق والمحتوى تحت */
     background: #fff;
     border: 1px solid #E8E5DF;
     border-radius: 20px;
     overflow: hidden;
     transition: transform 0.2s, box-shadow 0.2s;
 }
+
 .activity-card:hover {
     transform: translateY(-6px);
     box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
@@ -44,7 +49,8 @@ nav {
 
 .image-box {
     width: 100%;
-    aspect-ratio: 16 / 9; /* بدل height ثابت */
+    aspect-ratio: 16 / 9;
+    /* بدل height ثابت */
     overflow: hidden;
     border-radius: 16px 16px 0 0;
     flex-shrink: 0;
@@ -78,6 +84,7 @@ nav {
         border-color 0.2s;
     cursor: pointer;
 }
+
 .category-card:hover {
     transform: translateY(-4px);
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
@@ -95,6 +102,7 @@ nav {
     padding: 3px 10px;
     font-weight: 500;
 }
+
 .pill {
     background: #f0ede6;
     color: #5a5751;
@@ -103,9 +111,11 @@ nav {
     padding: 4px 12px;
     font-weight: 400;
 }
+
 .stars {
     color: #d4a350;
 }
+
 .img-placeholder {
     width: 100%;
     height: 180px;
@@ -113,4 +123,51 @@ nav {
     align-items: center;
     justify-content: center;
     font-size: 48px;
+}
+
+/* Form */
+#center-modal {
+    scrollbar-gutter: stable;
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #a09890;
+    margin-bottom: 6px;
+}
+
+.form-input {
+    width: 100%;
+    border: 1px solid #E8E5DF;
+    border-radius: 10px;
+    padding: 9px 14px;
+    font-size: 13px;
+    color: #1a1a18;
+    background: #FAFAF8;
+    outline: none;
+    transition: border-color 0.2s;
+    font-family: 'DM Sans', sans-serif;
+    resize: none;
+}
+
+.form-input:focus {
+    border-color: #D4A350;
+}
+
+.input-error {
+    border-color: #e05252;
+}
+
+.error-msg {
+    color: #e05252;
+    font-size: 12px;
+    margin-top: 4px;
 }

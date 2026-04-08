@@ -7,6 +7,10 @@ use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CenterController;
 
+Route::get('/test', function () {
+    abort(401);
+});
+
 // Web Routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
@@ -25,7 +29,16 @@ Route::get('/privacy', function () {
 
 
 Route::get('/for-centers', [CenterController::class, 'index'])->name('for-centers');
-Route::get('/center-register', [CenterController::class, 'create'])->name('center.register');
+
+Route::middleware(['auth'])->group(function () {
+    Route::post('/center-register', [CenterController::class, 'store'])->name('center.register');
+});
+
+Route::middleware(['auth', 'center_owner'])->group(function () {
+    Route::get('/center/dashboard', [CenterController::class, 'dashboard'])->name('center.dashboard');
+    Route::get('/center/{center}/activities', [CenterController::class, 'activities'])->name('center.activities');
+    Route::get('/center/{center}/bookings', [CenterController::class, 'bookings'])->name('center.bookings');
+});
 
 // Protected routes
 Route::get('/dashboard', function () {
