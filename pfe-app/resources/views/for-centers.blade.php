@@ -1,7 +1,7 @@
 <x-layouts.app-main title="For Centers">
 
     @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/for-centers.css') }}">
+        <link rel="stylesheet" href="{{ asset('css/for-centers.css') }}">
     @endpush
 
     {{-- Hero --}}
@@ -15,7 +15,7 @@
                 Join Lebanon's first AI-powered activity platform and connect with hundreds of people looking for
                 exactly what you offer.
             </p>
-            <button onclick="document.getElementById('center-modal').classList.remove('hidden')"
+            <button onclick="openModal('center-modal')"
                 class="search-btn inline-block px-8 py-3 text-sm font-medium">
                 Register your center
             </button>
@@ -24,7 +24,7 @@
 
     {{-- Stats --}}
     <div class="max-w-5xl mx-auto px-6 py-16">
-        <div class="grid grid-cols-3 gap-6 mb-20">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-20">
             <div class="stat-card">
                 <div class="stat-number">{{ $usersCount }}+</div>
                 <div class="stat-label">Active Users</div>
@@ -114,7 +114,7 @@
                 <p class="text-white/60 text-sm mb-8 max-w-md mx-auto">Join Activio today and put your center in front
                     of the right people.</p>
                 <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                    <button onclick="document.getElementById('center-modal').classList.remove('hidden')"
+                    <button onclick="openModal('center-modal')"
                         class="search-btn inline-block px-8 py-3 text-sm font-medium">
                         Register your center
                     </button>
@@ -128,123 +128,55 @@
     </div>
 
     {{-- MODAL --}}
-    <div id="center-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-4"
-        style="background:rgba(0,0,0,0.6)">
+    <x-modal id="center-modal" title="Register your center">
+        <x-center.center-form form-id="center-form" />
+    </x-modal>
 
-        <div class="bg-white rounded-2xl w-full max-w-lg p-8 relative" style="max-height:90vh; overflow-y:auto">
-
-            {{-- Close button --}}
-            <button onclick="document.getElementById('center-modal').classList.add('hidden')"
-                class="absolute top-4 right-4 text-[#a09890] hover:text-[#1a1a18] text-xl font-bold">
-                ✕
-            </button>
-
-            <h2 class="font-display text-2xl font-bold mb-6">Register your center</h2>
-
-
-            <form id="center-form" action="{{ route('center.register') }}" method="POST">
-                @csrf
-
-                <div class="form-group">
-                    <label class="form-label">Center Name</label>
-                    <input type="text" name="name" class="form-input @error('name') input-error @enderror"
-                        placeholder="e.g. Dragon Academy" value="{{ old('name') }}">
-                    @error('name') <p class="error-msg">{{ $message }}</p> @enderror
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Description</label>
-                    <textarea name="description" rows="3" class="form-input"
-                        placeholder="Tell us about your center...">{{ old('description') }}</textarea>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Address</label>
-                    <input type="text" name="address" class="form-input @error('address') input-error @enderror"
-                        placeholder="e.g. Rue Gouraud, Gemmayzeh" value="{{ old('address') }}">
-                    @error('address') <p class="error-msg">{{ $message }}</p> @enderror
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">City</label>
-                    <select name="city" class="form-input">
-                        <option value="Beirut">Beirut</option>
-                        <option value="Jounieh">Jounieh</option>
-                        <option value="Tripoli">Tripoli</option>
-                        <option value="Sidon">Sidon</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Phone</label>
-                    <input type="text" name="phone" class="form-input"
-                        placeholder="+961 70 000 000" value="{{ old('phone') }}">
-                </div>
-
-                <button type="submit" class="search-btn w-full py-3 text-sm font-medium mt-2">
-                    Submit
-                </button>
-            </form>
-
-        </div>
-    </div>
-
-    {{-- Close on backdrop click --}}
     @push('scripts')
-    <script>
-        document.getElementById('center-modal').addEventListener('click', function(e) {
-            if (e.target === this) this.classList.add('hidden');
-        });
-    </script>
+        <script src="{{ asset('js/center.js') }}"></script>
+        <script>
+            document.getElementById('center-form')?.addEventListener('submit', async function(e) {
+                e.preventDefault();
 
-    <script>
-        document.getElementById('center-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
+                document.querySelectorAll('.error-msg').forEach(el => el.remove());
+                document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
 
-            // مسح الأخطاء القديمة
-            document.querySelectorAll('.error-msg').forEach(el => el.remove());
-            document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
+                const formData = new FormData(this);
+                const res = await fetch('{{ route("center.register") }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('[name=_token]').value,
+                        'Accept': 'application/json',
+                    },
+                    body: formData,
+                });
 
-            const formData = new FormData(this);
-
-            const res = await fetch('{{ route("center.register") }}', {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('[name=_token]').value,
-                    'Accept': 'application/json',
-                },
-                body: formData,
-            });
-
-            if (res.status === 401) {
-                window.location.href = '{{ route("login") }}';
-                return;
-            }
-
-            if (res.ok) {
-                window.location.href = '{{ route("center.dashboard") }}';
-            } else {
-                const data = await res.json();
-                if (data.errors) {
-                    for (const [field, messages] of Object.entries(data.errors)) {
-                        const input = document.querySelector(`[name=${field}]`);
-                        if (input) {
-                            input.classList.add('input-error');
-                            const msg = document.createElement('p');
-                            msg.className = 'error-msg';
-                            msg.textContent = messages[0];
-                            input.after(msg);
-                        }
-                    }
-                    const firstError = document.querySelector('.error-msg');
-                    if (firstError) firstError.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'center'
-                    });
+                if (res.status === 401) {
+                    window.location.href = '{{ route("login") }}';
+                    return;
                 }
-            }
-        });
-    </script>
+
+                if (res.ok) {
+                    window.location.href = '{{ route("center.dashboard") }}';
+                } else {
+                    const data = await res.json();
+                    if (data.errors) {
+                        for (const [field, messages] of Object.entries(data.errors)) {
+                            const input = document.querySelector(`[name=${field}]`);
+                            if (input) {
+                                input.classList.add('input-error');
+                                const msg = document.createElement('p');
+                                msg.className = 'error-msg';
+                                msg.textContent = messages[0];
+                                input.after(msg);
+                            }
+                        }
+                        const firstError = document.querySelector('.error-msg');
+                        if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }
+            });
+        </script>
     @endpush
 
 </x-layouts.app-main>

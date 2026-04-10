@@ -7,10 +7,6 @@ use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CenterController;
 
-Route::get('/test', function () {
-    abort(401);
-});
-
 // Web Routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
@@ -36,9 +32,18 @@ Route::middleware(['auth'])->group(function () {
 
 Route::middleware(['auth', 'center_owner'])->group(function () {
     Route::get('/center/dashboard', [CenterController::class, 'dashboard'])->name('center.dashboard');
+    Route::post('/center/{center}/toggle-active', [CenterController::class, 'toggleActive'])->name('center.toggle-active');
+    Route::post('/center/{center}/update', [CenterController::class, 'update'])->name('center.update');
+    Route::delete('/center/{center}/delete', [CenterController::class, 'destroy'])->name('center.destroy');
     Route::get('/center/{center}/activities', [CenterController::class, 'activities'])->name('center.activities');
     Route::get('/center/{center}/bookings', [CenterController::class, 'bookings'])->name('center.bookings');
+
+    Route::post('/center/{center}/activities', [ActivityController::class, 'store'])->name('center.activities.store');
+    Route::post('/activity/{activity}/update', [ActivityController::class, 'update'])->name('activity.update');
+    Route::delete('/activity/{activity}/delete', [ActivityController::class, 'destroy'])->name('activity.destroy');
+    Route::post('/activity/{activity}/toggle-active', [ActivityController::class, 'toggleActive'])->name('activity.toggle-active');
 });
+
 
 // Protected routes
 Route::get('/dashboard', function () {

@@ -21,7 +21,7 @@
     <div class="p-5">
         <div class="ai-badge mb-3 inline-block">✦ {{ $act->category->name }}</div>
         <h3 class="font-display text-base font-bold leading-snug mb-1">{{ $act->title }}</h3>
-        <p class="text-xs mb-3" style="color:#8a7a6a">{{ $act->center->name }} · {{ $act->center->city }}</p>
+        <p class="text-xs mb-3" style="color:#8a7a6a">{{ $act->center->name }} · {{ $act->center->address }} · {{ $act->center->city }}</p>
 
         <div class="flex flex-wrap gap-1.5 mb-3">
             @if($act->min_age || $act->max_age)

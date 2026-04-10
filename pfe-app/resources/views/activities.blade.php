@@ -21,7 +21,7 @@
 
             {{-- FILTERS SIDEBAR --}}
             <aside class="w-full lg:w-64 flex-shrink-0 lg:sticky top-20">
-                <form method="GET" action="{{ route('activities') }}">
+                <form id="filters-form" method="GET" action="{{ route('activities') }}">
                     <div class="filter-card space-y-6">
 
                         <div>
@@ -62,20 +62,24 @@
 
                         <div>
                             <span class="filter-label">City</span>
-                            <select name="city" class="filter-input">
-                                <option value="">All cities</option>
-                                <option value="Beirut" {{ request('city') == 'Beirut' ? 'selected' : '' }}>Beirut</option>
-                                <option value="Jounieh" {{ request('city') == 'Jounieh' ? 'selected' : '' }}>Jounieh
-                                </option>
-                                <option value="Tripoli" {{ request('city') == 'Tripoli' ? 'selected' : '' }}>Tripoli
-                                </option>
-                                <option value="Sidon" {{ request('city') == 'Sidon' ? 'selected' : '' }}>Sidon</option>
-                            </select>
+                            <input type="text" name="city" class="filter-input" placeholder="e.g. Beirut"
+                                value="{{ request('city') }}" list="cities-list">
+                            <datalist id="cities-list">
+                                @foreach($cities as $city)
+                                    <option value="{{ $city }}" />
+                                @endforeach
+                            </datalist>
+                        </div>
+
+                        <div>
+                            <span class="filter-label">Address</span>
+                            <input type="text" name="address" class="filter-input"
+                                placeholder="e.g. Hamra, Gemmayzeh..." value="{{ request('address') }}">
                         </div>
 
                         <button type="submit" class="search-btn w-full py-2.5">Apply Filters</button>
 
-                        @if(request()->anyFilled(['search', 'category', 'max_price', 'age', 'city']))
+                        @if(request()->anyFilled(['search', 'category', 'max_price', 'age', 'city', 'address']))
                             <a href="{{ route('activities') }}" class="block text-center text-xs" style="color:#a09890">
                                 Clear all filters
                             </a>
@@ -108,7 +112,7 @@
     {{-- Scripts --}}
     @push('scripts')
         <script>
-            document.querySelector('form').addEventListener('submit', function (e) {
+            document.getElementById('filters-form').addEventListener('submit', function (e) {
                 e.preventDefault();
                 const formData = new FormData(this);
                 const params = new URLSearchParams();
@@ -124,7 +128,7 @@
 
             function setCategory(slug) {
                 document.getElementById('category-input').value = slug;
-                document.forms[0].dispatchEvent(new Event('submit'));
+                document.getElementById('filters-form').dispatchEvent(new Event('submit'));
             }
         </script>
     @endpush
