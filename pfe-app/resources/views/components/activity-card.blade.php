@@ -5,18 +5,32 @@
     $image = $act->images->first();
     $avgRating = $act->reviews->avg('rating');
     $reviewCount = $act->reviews->count();
+    $isSaved = auth()->check()
+        ? $act->favourites->contains('user_id', auth()->id())
+        : false;
 @endphp
 
 <div class="activity-card">
-    @if($image)
-        <div class="image-box">
+    {{-- Image --}}
+    <div class="image-box {{ !$image ? $bg : '' }}" style="position:relative">
+        @if($image)
             <img src="{{ asset($image->image_path) }}" alt="{{ $act->title }}">
-        </div>
-    @else
-        <div class="image-box {{ $bg }}">
+        @else
             <span style="font-size:48px">{{ $act->category->icon }}</span>
-        </div>
-    @endif
+        @endif
+
+        {{-- Favourite button --}}
+        @auth
+        <button onclick="toggleFavourite({{ $act->id }}, this)"
+            class="fav-btn {{ $isSaved ? 'saved' : '' }}"
+            title="{{ $isSaved ? 'Remove from saved' : 'Save activity' }}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="{{ $isSaved ? 'currentColor' : 'none' }}"
+                stroke="currentColor" stroke-width="2">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            </svg>
+        </button>
+        @endauth
+    </div>
 
     <div class="p-5">
         <div class="ai-badge mb-3 inline-block">✦ {{ $act->category->name }}</div>
@@ -25,7 +39,7 @@
 
         <div class="flex flex-wrap gap-1.5 mb-3">
             @if($act->min_age || $act->max_age)
-                <span class="pill">Ages {{ $act->min_age ?? '0' }}{{ $act->max_age ? '–' . $act->max_age : '+' }}</span>
+                <span class="pill">Ages {{ $act->min_age ?? '0' }}{{ $act->max_age ? '–'.$act->max_age : '+' }}</span>
             @else
                 <span class="pill">All ages</span>
             @endif

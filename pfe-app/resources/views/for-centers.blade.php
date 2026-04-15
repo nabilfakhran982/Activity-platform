@@ -15,7 +15,7 @@
                 Join Lebanon's first AI-powered activity platform and connect with hundreds of people looking for
                 exactly what you offer.
             </p>
-            <button onclick="openModal('center-modal')"
+            <button onclick="openCenterModal('center-modal', 'center-form')"
                 class="search-btn inline-block px-8 py-3 text-sm font-medium">
                 Register your center
             </button>
@@ -90,8 +90,7 @@
             <div class="fc-step">
                 <div class="step-number">1</div>
                 <h3 class="font-display text-lg font-bold mb-2">Create your account</h3>
-                <p class="text-sm text-[#5a5751] leading-relaxed">Sign up as a center owner and set up your profile in
-                    minutes.</p>
+                <p class="text-sm text-[#5a5751] leading-relaxed">Sign up and register your center to become a center owner in minutes.</p>
             </div>
             <div class="fc-step">
                 <div class="step-number">2</div>
@@ -114,7 +113,7 @@
                 <p class="text-white/60 text-sm mb-8 max-w-md mx-auto">Join Activio today and put your center in front
                     of the right people.</p>
                 <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                    <button onclick="openModal('center-modal')"
+                    <button onclick="openCenterModal('center-modal', 'center-form')"
                         class="search-btn inline-block px-8 py-3 text-sm font-medium">
                         Register your center
                     </button>
@@ -162,7 +161,7 @@
                     const data = await res.json();
                     if (data.errors) {
                         for (const [field, messages] of Object.entries(data.errors)) {
-                            const input = document.querySelector(`[name=${field}]`);
+                            const input = document.querySelector(`[name="${field}"]`);
                             if (input) {
                                 input.classList.add('input-error');
                                 const msg = document.createElement('p');

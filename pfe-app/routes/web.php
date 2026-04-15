@@ -1,6 +1,9 @@
 <?php
 
+use App\Http\Controllers\FavouriteController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\SearchController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ActivityController;
@@ -26,6 +29,14 @@ Route::get('/privacy', function () {
 
 Route::get('/for-centers', [CenterController::class, 'index'])->name('for-centers');
 
+Route::get('/search', [SearchController::class, 'index'])->name('search');
+Route::post('/search', [SearchController::class, 'search'])->name('search.query');
+
+Route::middleware('auth')->group(function () {
+    Route::post('/activity/{activity}/favourite', [FavouriteController::class, 'toggle'])->name('activity.favourite');
+    Route::post('/booking/{booking}/review', [ReviewController::class, 'store'])->name('booking.review');
+});
+
 Route::middleware(['auth'])->group(function () {
     Route::post('/center-register', [CenterController::class, 'store'])->name('center.register');
 });
@@ -35,9 +46,9 @@ Route::middleware(['auth', 'center_owner'])->group(function () {
     Route::post('/center/{center}/toggle-active', [CenterController::class, 'toggleActive'])->name('center.toggle-active');
     Route::post('/center/{center}/update', [CenterController::class, 'update'])->name('center.update');
     Route::delete('/center/{center}/delete', [CenterController::class, 'destroy'])->name('center.destroy');
-    Route::get('/center/{center}/activities', [CenterController::class, 'activities'])->name('center.activities');
     Route::get('/center/{center}/bookings', [CenterController::class, 'bookings'])->name('center.bookings');
 
+    Route::get('/center/{center}/activities', [ActivityController::class, 'activities'])->name('center.activities');
     Route::post('/center/{center}/activities', [ActivityController::class, 'store'])->name('center.activities.store');
     Route::post('/activity/{activity}/update', [ActivityController::class, 'update'])->name('activity.update');
     Route::delete('/activity/{activity}/delete', [ActivityController::class, 'destroy'])->name('activity.destroy');
@@ -51,9 +62,9 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
+    Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
 });
 
 require __DIR__ . '/auth.php';

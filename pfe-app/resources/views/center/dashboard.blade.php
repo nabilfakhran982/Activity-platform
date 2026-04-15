@@ -11,7 +11,7 @@
                 <p class="text-xs uppercase tracking-widest mb-2" style="color:rgba(212,163,80,0.8)">Center Owner</p>
                 <h1 class="font-display text-white text-3xl font-bold">My Dashboard</h1>
             </div>
-            <button onclick="openModal('add-center-modal')" class="search-btn px-5 py-2.5 text-sm">
+            <button onclick="openCenterModal('add-center-modal', 'add-center-form')" class="search-btn px-5 py-2.5 text-sm">
                 + Add Center
             </button>
         </div>
@@ -42,18 +42,18 @@
         {{-- CENTERS --}}
         <h2 class="font-display text-2xl font-bold mb-6">My Centers</h2>
 
-        @if($centers->isEmpty())
-            <div class="no-results">
-                <p class="text-lg font-medium mb-2">No centers yet</p>
-                <p class="text-sm">Click "Add Center" to get started</p>
-            </div>
-        @else
-            <div id="centers-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-5 mb-12">
+        <div id="centers-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-5 mb-12">
+            @if($centers->isEmpty())
+                <div class="no-results col-span-3">
+                    <p class="text-lg font-medium mb-2">No centers yet</p>
+                    <p class="text-sm">Click "Add Center" to get started</p>
+                </div>
+            @else
                 @foreach($centers as $center)
                     <x-center.center-card :center="$center" />
                 @endforeach
-            </div>
-        @endif
+            @endif
+        </div>
 
     </div>
 

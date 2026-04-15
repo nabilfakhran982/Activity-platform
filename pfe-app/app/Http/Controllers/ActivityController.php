@@ -8,7 +8,7 @@ use Auth;
 use Illuminate\Http\Request;
 use App\Models\Activity;
 use App\Models\Category;
-use Schedule;
+use App\Models\Schedule;
 
 class ActivityController extends Controller
 {
@@ -17,7 +17,7 @@ class ActivityController extends Controller
         $categories = Category::all();
         $cities = require app_path('Data/cities.php');
 
-        $query = Activity::with(['center', 'category', 'reviews', 'images'])
+        $query = Activity::with(['center', 'category', 'reviews', 'images', 'favourites'])
             ->where('is_active', true);
 
         if ($request->filled('category')) {
@@ -67,6 +67,7 @@ class ActivityController extends Controller
 
         $activities = Activity::with(['category', 'schedules', 'images'])
             ->where('center_id', $center->id)
+            ->orderByDesc('updated_at')
             ->get();
 
         $categories = Category::all();
@@ -124,10 +125,13 @@ class ActivityController extends Controller
 
         // Image
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('activities', 'public');
+            $category = Category::find($request->category_id);
+            $slug = $category ? $category->slug : 'activity';
+            $filename = $slug . '-' . $activity->id . '.' . $request->file('image')->getClientOriginalExtension();
+            $request->file('image')->move(public_path('images/activities'), $filename);
             ActivityImage::create([
                 'activity_id' => $activity->id,
-                'image_path' => $path,
+                'image_path' => 'images/activities/' . $filename,
             ]);
         }
 
@@ -153,6 +157,9 @@ class ActivityController extends Controller
             'max_age' => 'nullable|integer|min:0',
             'is_private' => 'boolean',
             'schedules' => 'nullable|array',
+            'schedules.*.day_of_week' => 'required_with:schedules.*|in:monday,tuesday,wednesday,thursday,friday,saturday,sunday',
+            'schedules.*.start_time' => 'required_with:schedules.*',
+            'schedules.*.end_time' => 'required_with:schedules.*',
             'image' => 'nullable|image|max:2048',
         ]);
 
@@ -172,22 +179,34 @@ class ActivityController extends Controller
         if ($request->schedules) {
             $activity->schedules()->delete();
             foreach ($request->schedules as $schedule) {
-                Schedule::create([
-                    'activity_id' => $activity->id,
-                    'day_of_week' => $schedule['day_of_week'],
-                    'start_time' => $schedule['start_time'],
-                    'end_time' => $schedule['end_time'],
-                ]);
+                if (isset($schedule['day_of_week']) && isset($schedule['start_time']) && isset($schedule['end_time'])) {
+                    Schedule::create([
+                        'activity_id' => $activity->id,
+                        'day_of_week' => $schedule['day_of_week'],
+                        'start_time' => $schedule['start_time'],
+                        'end_time' => $schedule['end_time'],
+                    ]);
+                }
             }
         }
 
         // Image
         if ($request->hasFile('image')) {
-            $activity->images()->delete();
-            $path = $request->file('image')->store('activities', 'public');
+            // امسح الصورة القديمة من الـ disk
+            $oldImage = $activity->images()->first();
+            if ($oldImage) {
+                $oldPath = public_path($oldImage->image_path);
+                if (file_exists($oldPath)) {
+                    unlink($oldPath);
+                }
+                $activity->images()->delete();
+            }
+
+            $filename = $activity->category->slug . '-' . $activity->id . '.' . $request->file('image')->getClientOriginalExtension();
+            $request->file('image')->move(public_path('images/activities'), $filename);
             ActivityImage::create([
                 'activity_id' => $activity->id,
-                'image_path' => $path,
+                'image_path' => 'images/activities/' . $filename,
             ]);
         }
 
@@ -201,9 +220,20 @@ class ActivityController extends Controller
     {
         if ($activity->center->user_id !== Auth::id())
             abort(403);
+
+        // امسح الصورة من الـ disk
+        $image = $activity->images()->first();
+        if ($image) {
+            $path = public_path($image->image_path);
+            if (file_exists($path)) {
+                unlink($path);
+            }
+        }
+
         $activity->schedules()->delete();
         $activity->images()->delete();
         $activity->delete();
+
         return response()->json(['success' => true]);
     }
 

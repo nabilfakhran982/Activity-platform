@@ -190,4 +190,51 @@ input[list]:focus {
     margin-top: 4px;
 }
 
+/* Favourite button */
+.fav-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 34px;
+    height: 34px;
+    background: rgba(255,255,255,0.9);
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #c0b8b0;
+    transition: all 0.2s;
+    backdrop-filter: blur(4px);
+}
+
+.fav-btn:hover {
+    color: #e05252;
+    transform: scale(1.1);
+}
+
+.fav-btn.saved {
+    color: #e05252;
+    background: #fff;
+}
+
+.image-box {
+    position: relative;
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.image-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+}
+
 

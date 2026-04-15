@@ -26,22 +26,23 @@
             <div class="search-bar flex items-center gap-3 px-5 py-3 max-w-2xl mx-auto">
                 <svg class="text-white/40 flex-shrink-0" width="18" height="18" fill="none" stroke="currentColor"
                     stroke-width="2" viewBox="0 0 24 24">
-                    <circle cx="11" cy="11" r="8" />
-                    <path d="m21 21-4.35-4.35" />
+                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
                 </svg>
-                <input type="text" placeholder='Try "karate for kids near Achrafieh on Saturday"'
+                <input type="text" id="home-search"
+                    placeholder='Try "karate for kids near Achrafieh on Saturday"'
                     class="flex-1 bg-transparent text-white placeholder-white/30 text-sm outline-none py-1">
-                <button class="search-btn px-5 py-2.5 text-sm font-medium whitespace-nowrap">
+                <button onclick="window.location.href='/search?q='+encodeURIComponent(document.getElementById('home-search').value)"
+                    class="search-btn px-5 py-2.5 text-sm font-medium whitespace-nowrap">
                     Search
                 </button>
             </div>
 
             {{-- Quick suggestions --}}
             <div class="flex flex-wrap justify-center gap-2 mt-5">
-                @foreach(['Pilates', 'Boxing', 'Swimming', 'Football', 'Arts & Crafts'] as $tag)
-                    <button
+                @foreach($categories->take(5) as $cat)
+                    <button onclick="window.location.href='/search?q={{ urlencode($cat->name) }}'"
                         class="text-white/45 text-xs border border-white/15 rounded-full px-4 py-1.5 hover:border-white/40 hover:text-white/70 transition-colors">
-                        {{ $tag }}
+                        {{ $cat->name }}
                     </button>
                 @endforeach
             </div>
@@ -49,7 +50,10 @@
 
         {{-- Floating stats --}}
         <div class="max-w-3xl mx-auto w-full mt-16 grid grid-cols-3 gap-4 relative z-10">
-            @foreach([['300+', 'Activities'], ['50+', 'Centers'], ['4.9★', 'Avg rating']] as $stat)
+            @foreach([
+                [$activitiesCount . '+', 'Activities'],
+                [$centersCount . '+', 'Centers'],
+            ] as $stat)
                 <div class="text-center border border-white/10 rounded-2xl py-4 px-2"
                     style="background:rgba(255,255,255,0.04)">
                     <div class="font-display text-white text-2xl font-bold">{{ $stat[0] }}</div>
@@ -97,7 +101,7 @@
     </section>
 
     {{-- ============ HOW IT WORKS ============ --}}
-    <section class="bg-white py-20">
+    <section id="how-it-works" class="bg-white py-20">
         <div class="max-w-4xl mx-auto px-6">
             <div class="text-center mb-14">
                 <p class="text-xs uppercase tracking-widest text-[#a09890] mb-2">Simple &amp; smart</p>
@@ -181,5 +185,11 @@
                 window.location.href = `/activities?category=${slug}`;
             }
         })
+
+        document.getElementById('home-search').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                window.location.href = '/search?q=' + encodeURIComponent(this.value);
+            }
+        });
     </script>
 </x-layouts.app-main>

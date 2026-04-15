@@ -7,8 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 class Booking extends Model
 {
     protected $fillable = [
-        'user_id', 'schedule_id',
-        'booking_date', 'status', 'notes'
+        'user_id',
+        'schedule_id',
+        'booking_date',
+        'status',
+        'notes'
     ];
 
     public function user()
@@ -19,5 +22,10 @@ class Booking extends Model
     public function schedule()
     {
         return $this->belongsTo(Schedule::class);
+    }
+
+    public function review()
+    {
+        return $this->hasOne(Review::class);
     }
 }

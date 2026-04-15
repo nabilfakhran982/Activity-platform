@@ -1,454 +1,290 @@
-// ============ Modal helpers ============
-function openModal(id) {
-    document.getElementById(id).style.display = 'flex';
-}
-
-function closeModal(id) {
-    document.getElementById(id).style.display = 'none';
-}
-
-// Close on backdrop click
-document.querySelectorAll('[id$="-modal"]').forEach(modal => {
-    modal.addEventListener('click', function(e) {
-        if (e.target === this) closeModal(this.id);
-    });
-});
-
-// ============ AJAX helper ============
-async function ajaxPost(url, formData) {
-    return await fetch(url, {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('[name=_token]').value,
-            'Accept': 'application/json',
-        },
-        body: formData,
-    });
-}
-
-// ============ Form errors ============
-function clearErrors(formId) {
-    document.querySelectorAll(`#${formId} .error-msg`).forEach(el => el.textContent = '');
-    document.querySelectorAll(`#${formId} .input-error`).forEach(el => el.classList.remove('input-error'));
-}
-
-function showErrors(formId, errors) {
-    for (const [field, messages] of Object.entries(errors)) {
-        const errEl = document.getElementById(`${formId}-err-${field}`);
-        const input = document.querySelector(`#${formId} [name=${field}]`);
-        if (errEl) errEl.textContent = messages[0];
-        if (input) input.classList.add('input-error');
-    }
-    const firstError = document.querySelector(`#${formId} .error-msg:not(:empty)`);
-    if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-}
-
 // ============ Add Center ============
-document.getElementById('add-center-form')?.addEventListener('submit', async function(e) {
-    e.preventDefault();
-    clearErrors('add-center-form');
-
-    const formData = new FormData(this);
-    const res = await ajaxPost('/center-register', formData);
-
-    if (res.ok) {
-        const data = await res.json();
-        if (data.success) {
-            this.reset();
-            closeModal('add-center-modal');
-
-            // Add new center to the grid without refresh using returned data
-            if (data.center) {
-                await addNewCenterToGridDirect(data.center);
-            } else {
-                // Fallback to old method if no center data returned
-                await addNewCenterToGrid();
-            }
-        }
-    } else {
-        const data = await res.json();
-        if (data.errors) showErrors('add-center-form', data.errors);
-    }
-});
-
-// ============ Edit Center ============
-function openEditModal(id, center) {
-    const csrfToken = document.querySelector('[name=_token]').value;
-    const container = document.getElementById('edit-form-container');
-    container.innerHTML = `
-        <form id="edit-center-form" data-id="${id}">
-            <input type="hidden" name="_token" value="${csrfToken}">
-            <div class="form-group">
-                <label class="form-label">Center Name</label>
-                <input type="text" name="name" class="form-input" value="${center.name}">
-                <p class="error-msg" id="edit-center-form-err-name"></p>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Description</label>
-                <textarea name="description" rows="3" class="form-input">${center.description ?? ''}</textarea>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Address</label>
-                <input type="text" name="address" class="form-input" value="${center.address}">
-                <p class="error-msg" id="edit-center-form-err-address"></p>
-            </div>
-            <div class="form-group">
-                <label class="form-label">City</label>
-                <input type="text" name="city" class="form-input" value="${center.city}">
-                <p class="error-msg" id="edit-center-form-err-city"></p>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Phone</label>
-                <input type="text" name="phone" class="form-input" value="${center.phone ?? ''}">
-            </div>
-            <button type="submit" class="search-btn w-full py-3 text-sm mt-2">Update Center</button>
-        </form>
-    `;
-
-    openModal('edit-center-modal');
-
-    document.getElementById('edit-center-form').addEventListener('submit', async function(e) {
+document
+    .getElementById("add-center-form")
+    ?.addEventListener("submit", async function (e) {
         e.preventDefault();
-        clearErrors('edit-center-form');
+        clearErrors("add-center-form");
 
-        const formData = new FormData(this);
-        const res = await ajaxPost(`/center/${id}/update`, formData);
+        const res = await ajaxPost("/center-register", new FormData(this));
 
         if (res.ok) {
             const data = await res.json();
             if (data.success) {
-                closeModal('edit-center-modal');
-
-                // Update center in the grid without refresh
-                await updateCenterInGrid(id, formData);
+                this.reset();
+                closeModal("add-center-modal");
+                if (data.center) {
+                    addNewCenterToGridDirect(data.center);
+                } else {
+                    window.location.reload();
+                }
             }
         } else {
             const data = await res.json();
-            if (data.errors) showErrors('edit-center-form', data.errors);
+            if (data.errors) showErrors("add-center-form", data.errors);
         }
     });
+
+// ============ Edit Center ============
+function openEditModal(id, center) {
+    const container = document.getElementById("edit-form-container");
+    container.innerHTML = `
+    <form id="edit-center-form" data-id="${id}">
+        <input type="hidden" name="_token" value="${document.querySelector("[name=_token]").value}">
+        <div class="form-group">
+            <label class="form-label">Center Name</label>
+            <input type="text" name="name" class="form-input" value="${center.name}">
+            <p class="error-msg" id="edit-center-form-err-name"></p>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea name="description" rows="3" class="form-input">${center.description ?? ""}</textarea>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Address</label>
+            <input type="text" name="address" class="form-input" value="${center.address}">
+            <p class="error-msg" id="edit-center-form-err-address"></p>
+        </div>
+        <div class="form-group">
+            <label class="form-label">City</label>
+            <input type="text" name="city" class="form-input" value="${center.city}">
+            <p class="error-msg" id="edit-center-form-err-city"></p>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Phone</label>
+            <input type="text" name="phone" class="form-input" value="${center.phone ?? ""}">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Location on Map</label>
+            <p class="text-xs mb-2" style="color:#a09890">Click on the map to pin your center's location</p>
+            <div id="edit-center-form-map" style="height:220px;border-radius:12px;border:1px solid #E8E5DF;overflow:hidden;z-index:1"></div>
+            <input type="hidden" name="lat" id="edit-center-form-lat" value="${center.lat ?? ""}">
+            <input type="hidden" name="lng" id="edit-center-form-lng" value="${center.lng ?? ""}">
+            <p class="text-xs mt-2" id="edit-center-form-coords" style="color:#a09890">
+                ${center.lat ? "📍 " + parseFloat(center.lat).toFixed(5) + ", " + parseFloat(center.lng).toFixed(5) : "No location selected"}
+            </p>
+        </div>
+        <button type="submit" class="search-btn w-full py-3 text-sm mt-2">Update Center</button>
+    </form>
+`;
+    openModal("edit-center-modal");
+    setTimeout(() => initCenterMap("edit-center-form"), 100);
+
+    document
+        .getElementById("edit-center-form")
+        .addEventListener("submit", async function (e) {
+            e.preventDefault();
+            clearErrors("edit-center-form");
+
+            const formData = new FormData(this);
+            const res = await ajaxPost(`/center/${id}/update`, formData);
+
+            if (res.ok) {
+                closeModal("edit-center-modal");
+                updateCenterInGrid(id, formData);
+            } else {
+                const data = await res.json();
+                if (data.errors) showErrors("edit-center-form", data.errors);
+            }
+        });
 }
 
 // ============ Toggle Active ============
 async function toggleActive(id, btn) {
     const res = await fetch(`/center/${id}/toggle-active`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-            'X-CSRF-TOKEN': document.querySelector('[name=_token]').value,
-            'Accept': 'application/json',
+            "X-CSRF-TOKEN": document.querySelector("[name=_token]").value,
+            Accept: "application/json",
         },
     });
 
     if (res.ok) {
         const data = await res.json();
-        btn.className = 'status-badge ' + (data.is_active ? 'active' : 'inactive');
-        btn.textContent = data.is_active ? 'Active' : 'Inactive';
+        btn.className =
+            "status-badge " + (data.is_active ? "active" : "inactive");
+        btn.textContent = data.is_active ? "Active" : "Inactive";
     }
 }
 
 // ============ Delete Center ============
 async function deleteCenter(id) {
-    // Create custom confirmation modal
-    const modalContainer = document.createElement('div');
-    modalContainer.id = 'delete-confirm-modal-' + id;
-    modalContainer.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+    const modalContainer = document.createElement("div");
+    modalContainer.id = `delete-confirm-modal-${id}`;
+    modalContainer.style.cssText =
+        "position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px";
     modalContainer.innerHTML = `
-        <div class="bg-white rounded-lg p-8 max-w-sm w-full mx-4 shadow-2xl">
-            <div class="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full mb-4">
-                <span class="material-icons text-red-600" style="font-size: 24px;">delete_outline</span>
+        <div style="background:#fff;border-radius:24px;padding:40px 32px;max-width:360px;width:100%;text-align:center">
+            <div style="width:56px;height:56px;background:#FEF2F2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e05252" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                </svg>
             </div>
-            <h3 class="text-lg font-bold text-center mb-2">Delete Center</h3>
-            <p class="text-gray-600 text-center text-sm mb-6">Are you sure you want to delete this center? This action cannot be undone.</p>
-            <div class="flex gap-3">
+            <h3 style="font-family:var(--font-display);font-size:20px;font-weight:700;color:#1a1a18;margin-bottom:8px">Delete Center</h3>
+            <p style="color:#8a7a6a;font-size:13px;line-height:1.6;margin-bottom:28px">Are you sure you want to delete this center?<br>This action cannot be undone.</p>
+            <div style="display:flex;gap:10px">
                 <button onclick="document.getElementById('delete-confirm-modal-${id}').remove()"
-                    class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50">
+                    style="flex:1;padding:12px;border:1px solid #E8E5DF;border-radius:999px;background:#fff;cursor:pointer;font-size:13px;font-weight:500;color:#5a5751;font-family:'DM Sans',sans-serif"
+                    onmouseover="this.style.borderColor='#1a1a18'" onmouseout="this.style.borderColor='#E8E5DF'">
                     Cancel
                 </button>
                 <button onclick="confirmDeleteCenter(${id})"
-                    class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700">
+                    style="flex:1;padding:12px;border:none;border-radius:999px;background:#e05252;color:#fff;cursor:pointer;font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif"
+                    onmouseover="this.style.background='#c94040'" onmouseout="this.style.background='#e05252'">
                     Delete
                 </button>
             </div>
         </div>
     `;
     document.body.appendChild(modalContainer);
-
-    // Close on backdrop click
-    modalContainer.addEventListener('click', function(e) {
+    modalContainer.addEventListener("click", function (e) {
         if (e.target === this) this.remove();
     });
 }
 
 async function confirmDeleteCenter(id) {
-    const modalId = 'delete-confirm-modal-' + id;
-    const modal = document.getElementById(modalId);
+    const modal = document.getElementById(`delete-confirm-modal-${id}`);
 
     const res = await fetch(`/center/${id}/delete`, {
-        method: 'DELETE',
+        method: "DELETE",
         headers: {
-            'X-CSRF-TOKEN': document.querySelector('[name=_token]').value,
-            'Accept': 'application/json',
+            "X-CSRF-TOKEN": document.querySelector("[name=_token]").value,
+            Accept: "application/json",
         },
     });
 
     if (res.ok) {
-        // Remove card
-        const centerCard = document.getElementById(`center-card-${id}`);
-        if (centerCard) {
-            centerCard.style.opacity = '0';
-            centerCard.style.transition = 'opacity 0.3s ease';
+        modal?.remove();
+        const card = document.getElementById(`center-card-${id}`);
+        if (card) {
+            card.style.opacity = "0";
+            card.style.transition = "opacity 0.3s";
             setTimeout(() => {
-                centerCard.remove();
-            }, 300);
-        }
-
-        // Update stats - decrease centers count
-        const statElements = document.querySelectorAll('.stat-number');
-        if (statElements.length > 0) {
-            const currentCount = parseInt(statElements[0].textContent) || 1;
-            statElements[0].textContent = Math.max(0, currentCount - 1);
-        }
-
-        // Close modal
-        if (modal) modal.remove();
-    } else {
-        alert('Error deleting center');
-    }
-}
-
-// ============ Success Message ============
-function showSuccessMessage(message) {
-    // Create message element
-    const msg = document.createElement('div');
-    msg.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
-    msg.textContent = String(message).trim();
-    msg.style.fontFamily = 'DM Sans, sans-serif';
-    msg.style.fontSize = '14px';
-    msg.style.fontWeight = '500';
-    msg.style.maxWidth = '300px';
-    msg.style.wordWrap = 'break-word';
-
-    document.body.appendChild(msg);
-
-    // Auto-hide after 3 seconds
-    setTimeout(() => {
-        if (msg.parentNode) {
-            msg.style.opacity = '0';
-            msg.style.transition = 'opacity 0.3s ease';
-            setTimeout(() => {
-                if (msg.parentNode) msg.remove();
-            }, 300);
-        }
-    }, 3000);
-}
-
-// ============ Load Center Cards ============
-// Removed - using dynamic updates instead
-
-// ============ Add New Center to Grid ============
-async function addNewCenterToGrid() {
-    try {
-        // Fetch updated centers data
-        const response = await fetch(window.location.href);
-        const html = await response.text();
-        const parser = new DOMParser();
-        const newDoc = parser.parseFromString(html, 'text/html');
-
-        // Update stats
-        const newStats = newDoc.querySelectorAll('.stat-number');
-        const currentStats = document.querySelectorAll('.stat-number');
-        newStats.forEach((newStat, index) => {
-            if (currentStats[index]) {
-                currentStats[index].textContent = newStat.textContent;
-            }
-        });
-
-        // Update centers grid
-        const newGrid = newDoc.querySelector('#centers-grid');
-        const currentGrid = document.querySelector('#centers-grid');
-
-        if (newGrid && currentGrid) {
-            // Remove "no centers" message if it exists
-            const noResults = currentGrid.querySelector('.no-results');
-            if (noResults) {
-                noResults.remove();
-            }
-
-            // Add new centers
-            const existingCenterIds = Array.from(currentGrid.querySelectorAll('[id^="center-card-"]'))
-                .map(card => card.id.replace('center-card-', ''));
-
-            newGrid.querySelectorAll('[id^="center-card-"]').forEach(newCard => {
-                const cardId = newCard.id.replace('center-card-', '');
-                if (!existingCenterIds.includes(cardId)) {
-                    currentGrid.appendChild(newCard.cloneNode(true));
+                card.remove();
+                const stat = document.querySelectorAll(".stat-number")[0];
+                if (stat)
+                    stat.textContent = Math.max(
+                        0,
+                        parseInt(stat.textContent || 0) - 1,
+                    );
+                const grid = document.getElementById("centers-grid");
+                if (
+                    grid &&
+                    grid.querySelectorAll('[id^="center-card-"]').length === 0
+                ) {
+                    grid.innerHTML = `
+                        <div class="no-results col-span-3">
+                            <p style="font-size:16px;font-weight:500;margin-bottom:8px">No centers yet</p>
+                            <p style="font-size:13px;color:#a09890">Click "Add Center" to get started</p>
+                        </div>`;
                 }
-            });
+            }, 300);
         }
-    } catch (error) {
-        console.error('Error adding center to grid:', error);
-        // Fallback to reload
-        window.location.reload();
+    } else {
+        modal?.remove();
     }
 }
 
-// ============ Add New Center to Grid Direct ============
-async function addNewCenterToGridDirect(center) {
-    try {
-        let grid = document.querySelector('#centers-grid');
-        if (!grid) {
-            const sectionTitle = document.querySelector('h2.font-display.text-2xl.font-bold.mb-6');
-            grid = document.createElement('div');
-            grid.id = 'centers-grid';
-            grid.className = 'grid md:grid-cols-2 lg:grid-cols-3 gap-5 mb-12';
-            if (sectionTitle && sectionTitle.parentNode) {
-                sectionTitle.parentNode.insertBefore(grid, sectionTitle.nextSibling);
-            } else {
-                document.body.appendChild(grid);
-            }
-        }
+// ============ Add center to grid ============
+function addNewCenterToGridDirect(center) {
+    const grid = document.getElementById("centers-grid");
+    if (!grid) return;
 
-        // Remove "no centers" message if it exists
-        const noResults = grid.querySelector('.no-results');
-        if (noResults) {
-            noResults.remove();
-        }
+    const noResults = grid.querySelector(".no-results");
+    if (noResults) noResults.remove();
 
-        // Update stats
-        const statElements = document.querySelectorAll('.stat-number');
-        if (statElements.length > 0) {
-            // Assuming first stat is centers count
-            const currentCount = parseInt(statElements[0].textContent) || 0;
-            statElements[0].textContent = currentCount + 1;
-        }
+    const stat = document.querySelectorAll(".stat-number")[0];
+    if (stat) stat.textContent = parseInt(stat.textContent || 0) + 1;
 
-        // Create center card HTML
-        const centerCard = document.createElement('div');
-        centerCard.className = 'center-card';
-        centerCard.id = `center-card-${center.id}`;
+    const isActive = center.is_active ?? true;
+    const initials = center.name
+        ? center.name.substring(0, 2).toUpperCase()
+        : "CN";
 
-        const isActive = center.is_active === undefined || center.is_active === null ? true : Boolean(center.is_active);
-
-        // Create logo placeholder
-        const logoInitials = center.name ? center.name.substring(0, 2).toUpperCase() : 'CN';
-
-        centerCard.innerHTML = `
-            <div class="center-card-logo-wrapper">
-                <div class="center-card-logo">
-                    <div class="center-logo-placeholder">${logoInitials}</div>
-                </div>
-                <div class="card-actions-overlay">
-                    <button onclick="openEditModal(${center.id}, ${JSON.stringify(center).replace(/"/g, '&quot;')})"
-                        class="icon-btn edit-btn" title="Edit">
-                        <span class="material-icons">edit</span>
-                    </button>
-                    <button onclick="deleteCenter(${center.id})"
-                        class="icon-btn delete-btn" title="Delete">
-                        <span class="material-icons">delete</span>
-                    </button>
-                </div>
+    const card = document.createElement("div");
+    card.className = "center-card";
+    card.id = `center-card-${center.id}`;
+    card.innerHTML = `
+        <div class="center-card-logo-wrapper">
+            <div class="center-card-logo">
+                <div class="center-logo-placeholder">${initials}</div>
             </div>
-            <div class="center-card-body">
-                <div class="center-card-header">
-                    <h3 class="font-display text-lg font-bold">${center.name}</h3>
-                    <button class="status-badge ${isActive ? 'active' : 'inactive'}"
-                        onclick="toggleActive(${center.id}, this)">
-                        ${isActive ? 'Active' : 'Inactive'}
-                    </button>
-                </div>
-                <p class="text-xs mb-1" style="color:#8a7a6a">${center.address}, ${center.city}</p>
-                <p class="text-xs mb-4" style="color:#8a7a6a">0 activities</p>
-                <div class="flex gap-2 w-full pt-4 border-t border-[#F0EDE6]">
-                    <a href="/center/${center.id}/activities"
-                        class="dashboard-btn flex-1 text-center text-xs">
-                        Manage Activities
-                    </a>
-                    <a href="/center/${center.id}/bookings"
-                        class="dashboard-btn-outline flex-1 text-center text-xs">
-                        Bookings
-                    </a>
-                </div>
+            <div class="card-actions-overlay">
+                <button onclick="openEditModal(${center.id}, ${JSON.stringify(center).replace(/"/g, "&quot;")})"
+                    class="icon-btn edit-btn" title="Edit">
+                    <span class="material-icons">edit</span>
+                </button>
+                <button onclick="deleteCenter(${center.id})" class="icon-btn delete-btn" title="Delete">
+                    <span class="material-icons">delete</span>
+                </button>
             </div>
-        `;
+        </div>
+        <div class="center-card-body">
+            <div class="center-card-header">
+                <h3 class="font-display text-lg font-bold">${center.name}</h3>
+                <button class="status-badge ${isActive ? "active" : "inactive"}"
+                    onclick="toggleActive(${center.id}, this)">
+                    ${isActive ? "Active" : "Inactive"}
+                </button>
+            </div>
+            <p class="text-xs mb-1" style="color:#8a7a6a">${center.address}, ${center.city}</p>
+            <p class="text-xs mb-4" style="color:#8a7a6a">0 activities</p>
+            <div style="display:flex;gap:8px;padding-top:12px;border-top:1px solid #F0EDE6">
+                <a href="/center/${center.id}/activities" class="dashboard-btn flex-1 text-center text-xs">Manage Activities</a>
+                <a href="/center/${center.id}/bookings" class="dashboard-btn-outline flex-1 text-center text-xs">Bookings</a>
+            </div>
+        </div>
+    `;
 
-        // Add to grid at top and scroll to it
-        grid.insertBefore(centerCard, grid.firstChild);
-        centerCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-    } catch (error) {
-        console.error('Error adding center directly to grid:', error);
-        // Fallback to reload
-        window.location.reload();
-    }
+    grid.insertBefore(card, grid.firstChild);
+    setTimeout(
+        () => card.scrollIntoView({ behavior: "smooth", block: "center" }),
+        100,
+    );
 }
 
-// ============ Update Center in Grid ============
-async function updateCenterInGrid(centerId, formData) {
-    try {
-        const centerCard = document.getElementById(`center-card-${centerId}`);
-        if (!centerCard) {
-            // If card not found, reload page
-            window.location.reload();
-            return;
-        }
-
-        // Update card content with form data
-        const name = formData.get('name');
-        const address = formData.get('address');
-        const city = formData.get('city');
-        const description = formData.get('description');
-        const phone = formData.get('phone');
-
-        // Update name
-        const nameElement = centerCard.querySelector('h3');
-        if (nameElement && name) {
-            nameElement.textContent = name;
-        }
-
-        // Update address and city
-        const addressElements = centerCard.querySelectorAll('p');
-        if (addressElements.length >= 1 && address && city) {
-            addressElements[0].textContent = `${address}, ${city}`;
-        }
-
-        // Update description if it exists
-        const descElement = centerCard.querySelector('.center-description');
-        if (descElement && description) {
-            descElement.textContent = description;
-        }
-
-        // Update phone if it exists
-        const phoneElement = centerCard.querySelector('.center-phone');
-        if (phoneElement && phone) {
-            phoneElement.textContent = `Phone: ${phone}`;
-        }
-
-        // Update the edit button's onclick to reflect new data
-        const editButton = centerCard.querySelector('.edit-btn');
-        if (editButton) {
-            const currentStatus = centerCard.querySelector('.status-badge')?.classList.contains('active') ? 1 : 0;
-            const updatedCenterData = {
-                id: centerId,
-                name: name || '',
-                description: description || '',
-                address: address || '',
-                city: city || '',
-                phone: phone || '',
-                is_active: currentStatus
-            };
-            editButton.onclick = () => openEditModal(centerId, updatedCenterData);
-        }
-
-        // Move updated card to top and scroll to it
-        const grid = document.querySelector('#centers-grid');
-        if (grid && centerCard.parentNode === grid) {
-            grid.prepend(centerCard);
-            centerCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-
-    } catch (error) {
-        console.error('Error updating center in grid:', error);
-        // Fallback to reload
+// ============ Update center in grid ============
+function updateCenterInGrid(id, formData) {
+    const card = document.getElementById(`center-card-${id}`);
+    if (!card) {
         window.location.reload();
+        return;
+    }
+
+    const name = formData.get("name");
+    const address = formData.get("address");
+    const city = formData.get("city");
+
+    const nameEl = card.querySelector("h3");
+    if (nameEl) nameEl.textContent = name;
+
+    const ps = card.querySelectorAll("p");
+    if (ps[0]) ps[0].textContent = `${address}, ${city}`;
+
+    const editBtn = card.querySelector(".edit-btn");
+    if (editBtn) {
+        const isActive = card
+            .querySelector(".status-badge")
+            ?.classList.contains("active")
+            ? 1
+            : 0;
+        const updated = {
+            id,
+            name,
+            address,
+            city,
+            description: formData.get("description"),
+            phone: formData.get("phone"),
+            is_active: isActive,
+        };
+        editBtn.onclick = () => openEditModal(id, updated);
+    }
+
+    const grid = document.getElementById("centers-grid");
+    if (grid) {
+        grid.insertBefore(card, grid.firstChild);
+        setTimeout(
+            () => card.scrollIntoView({ behavior: "smooth", block: "center" }),
+            100,
+        );
     }
 }

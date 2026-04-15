@@ -51,6 +51,8 @@ class CenterController extends Controller
             'city' => $request->city,
             'phone' => $request->phone,
             'is_active' => true,
+            'lat' => $request->lat ?: null,
+            'lng' => $request->lng ?: null,
         ]);
 
         $user->update(['role' => 'center_owner']);
@@ -97,6 +99,8 @@ class CenterController extends Controller
             'address' => $request->address,
             'city' => $request->city,
             'phone' => $request->phone,
+            'lat' => $request->lat ?: null,
+            'lng' => $request->lng ?: null,
         ]);
 
         return response()->json(['success' => true]);

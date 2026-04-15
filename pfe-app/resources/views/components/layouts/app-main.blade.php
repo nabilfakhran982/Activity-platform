@@ -11,18 +11,25 @@
         rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
     <link rel="stylesheet" href="{{ asset('css/main.css') }}">
     <link rel="stylesheet" href="{{ asset('css/components.css') }}">
     @stack('styles')
 </head>
 
-<body style="background:#F7F5F0">
+<body class="min-h-screen flex flex-col" style="background:#F7F5F0">
 
     <x-navbar />
 
-    {{ $slot }}
+    <main class="flex-1">
+        {{ $slot }}
+    </main>
 
     <x-footer />
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="{{ asset('js/helpers.js') }}"></script>
     @stack('scripts')
 </body>
 

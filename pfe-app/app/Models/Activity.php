@@ -50,7 +50,6 @@ class Activity extends Model
         return $this->hasMany(Favourite::class);
     }
 
-
     public function getBgClass(): string
     {
         return [
@@ -63,5 +62,10 @@ class Activity extends Model
             'Adventure & Outdoor' => 'bg-outdoor',
             'Football' => 'bg-football',
         ][$this->category->name] ?? 'bg-default';
+    }
+
+    public function getAvgRatingAttribute()
+    {
+        return $this->reviews->avg('rating');
     }
 }

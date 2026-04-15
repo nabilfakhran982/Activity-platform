@@ -1,0 +1,131 @@
+@props(['activity' => null, 'formId' => 'activity-form', 'categories' => []])
+
+<form id="{{ $formId }}" enctype="multipart/form-data">
+    @csrf
+
+    <div class="grid md:grid-cols-2 gap-4">
+
+        <div class="form-group md:col-span-2">
+            <label class="form-label">Title</label>
+            <input type="text" name="title" class="form-input"
+                value="{{ $activity?->title }}"
+                placeholder="e.g. Kids Karate — Beginners">
+            <p class="error-msg" id="{{ $formId }}-err-title"></p>
+        </div>
+
+        <div class="form-group md:col-span-2">
+            <label class="form-label">Description</label>
+            <textarea name="description" rows="2" class="form-input"
+                placeholder="Describe your activity...">{{ $activity?->description }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Category</label>
+            <select name="category_id" class="form-input">
+                <option value="">Select category</option>
+                @foreach($categories as $cat)
+                    <option value="{{ $cat->id }}"
+                        {{ $activity?->category_id == $cat->id ? 'selected' : '' }}>
+                        {{ $cat->icon }} {{ $cat->name }}
+                    </option>
+                @endforeach
+            </select>
+            <p class="error-msg" id="{{ $formId }}-err-category_id"></p>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Level</label>
+            <select name="level" class="form-input">
+                <option value="">Any level</option>
+                @foreach(['beginner', 'intermediate', 'advanced'] as $level)
+                    <option value="{{ $level }}"
+                        {{ $activity?->level === $level ? 'selected' : '' }}>
+                        {{ ucfirst($level) }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Price ($/session)</label>
+            <input type="number" name="price" class="form-input"
+                value="{{ $activity?->price }}"
+                placeholder="e.g. 25" min="0" step="0.01">
+            <p class="error-msg" id="{{ $formId }}-err-price"></p>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Capacity</label>
+            <input type="number" name="capacity" class="form-input"
+                value="{{ $activity?->capacity }}"
+                placeholder="e.g. 15" min="1">
+            <p class="error-msg" id="{{ $formId }}-err-capacity"></p>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Min Age</label>
+            <input type="number" name="min_age" class="form-input"
+                value="{{ $activity?->min_age }}"
+                placeholder="optional" min="0">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Max Age</label>
+            <input type="number" name="max_age" class="form-input"
+                value="{{ $activity?->max_age }}"
+                placeholder="optional" min="0">
+        </div>
+
+        <div class="form-group md:col-span-2">
+            <div class="flex items-center gap-3">
+                <input type="checkbox" name="is_private"
+                    id="{{ $formId }}-is_private" value="1"
+                    {{ $activity?->is_private ? 'checked' : '' }}
+                    class="w-4 h-4 accent-[#D4A350]">
+                <label for="{{ $formId }}-is_private" class="text-sm" style="color:#5a5751">
+                    Private session (1-on-1)
+                </label>
+            </div>
+        </div>
+
+    </div>
+
+    {{-- Schedules --}}
+    <div class="form-group mt-2">
+        <div class="flex items-center justify-between mb-3">
+            <label class="form-label mb-0">Schedules</label>
+            <button type="button"
+                onclick="addScheduleRow('{{ $formId }}-schedules')"
+                class="text-xs hover:underline" style="color:#D4A350; background:none; border:none; cursor:pointer">
+                + Add slot
+            </button>
+        </div>
+        <div id="{{ $formId }}-schedules" class="space-y-2">
+            @if($activity?->schedules)
+                @foreach($activity->schedules as $schedule)
+                    {{-- Schedules are populated via JS for edit mode --}}
+                @endforeach
+            @endif
+        </div>
+    </div>
+
+    {{-- Image --}}
+    <div class="form-group">
+        <label class="form-label">
+            Image {{ $activity ? '(leave empty to keep current)' : '' }}
+        </label>
+        @if($activity?->images?->first())
+            <div class="mb-2">
+                <img src="{{ asset('storage/' . $activity->images->first()->image_path) }}"
+                     alt="Current image"
+                     class="w-full h-32 object-cover rounded-lg">
+            </div>
+        @endif
+        <input type="file" name="image" accept="image/*" class="form-input" style="padding:8px">
+    </div>
+
+    <button type="submit" class="search-btn w-full py-3 text-sm mt-2">
+        {{ $activity ? 'Update Activity' : 'Add Activity' }}
+    </button>
+
+</form>
