@@ -75,6 +75,12 @@ class ActivityController extends Controller
         return view('center.activities', compact('center', 'activities', 'categories'));
     }
 
+    public function show(Activity $activity)
+    {
+        $activity->load(['center', 'category', 'schedules', 'images', 'reviews.user', 'favourites']);
+        return view('activity', compact('activity'));
+    }
+
     public function store(Request $request, Center $center)
     {
         if ($center->user_id !== Auth::id())
@@ -93,8 +99,12 @@ class ActivityController extends Controller
             'schedules' => 'nullable|array',
             'schedules.*.day_of_week' => 'required|in:monday,tuesday,wednesday,thursday,friday,saturday,sunday',
             'schedules.*.start_time' => 'required',
-            'schedules.*.end_time' => 'required',
-            'image' => 'nullable|image|max:2048',
+            'schedules.*.end_time' => 'nullable|after:schedules.*.start_time',
+            'image' => 'nullable|image|max:5120',
+            [
+                'image.max' => 'Image size must not exceed 5MB.',
+                'image.image' => 'The file must be an image (jpg, png, etc.).',
+            ]
         ]);
 
         $activity = Activity::create([
@@ -160,7 +170,11 @@ class ActivityController extends Controller
             'schedules.*.day_of_week' => 'required_with:schedules.*|in:monday,tuesday,wednesday,thursday,friday,saturday,sunday',
             'schedules.*.start_time' => 'required_with:schedules.*',
             'schedules.*.end_time' => 'required_with:schedules.*',
-            'image' => 'nullable|image|max:2048',
+            'image' => 'nullable|image|max:5120',
+            [
+                'image.max' => 'The image size must not exceed 5MB.',
+                'image.image' => 'The file must be an image (jpeg, png, bmp, gif, or svg).',
+            ]
         ]);
 
         $activity->update([
@@ -244,4 +258,5 @@ class ActivityController extends Controller
         $activity->update(['is_active' => !$activity->is_active]);
         return response()->json(['is_active' => $activity->is_active]);
     }
+
 }

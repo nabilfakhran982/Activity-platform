@@ -122,6 +122,7 @@
             </div>
         @endif
         <input type="file" name="image" accept="image/*" class="form-input" style="padding:8px">
+        <p class="error-msg" id="add-activity-form-err-image"></p>
     </div>
 
     <button type="submit" class="search-btn w-full py-3 text-sm mt-2">

@@ -10,7 +10,7 @@ class ProfileController extends Controller
 {
     public function index()
     {
-        $user = Auth::user()->load(['bookings.schedule.activity.center', 'favourites.activity']);
+        $user = Auth::user()->load(['bookings.schedule.activity.center', 'bookings.schedule.activity.images', 'bookings.schedule.activity.category', 'bookings.review', 'favourites.activity.images', 'favourites.activity.category']);
         return view('profile', compact('user'));
     }
 
@@ -19,12 +19,12 @@ class ProfileController extends Controller
         $user = Auth::user();
 
         $request->validate([
-            'name'  => 'required|string|max:255',
+            'name' => 'required|string|max:255',
             'phone' => 'nullable|string|max:20',
         ]);
 
         $user->update([
-            'name'  => $request->name,
+            'name' => $request->name,
             'phone' => $request->phone,
         ]);
 
@@ -35,7 +35,7 @@ class ProfileController extends Controller
     {
         $request->validate([
             'current_password' => 'required',
-            'password'         => 'required|min:8|confirmed',
+            'password' => 'required|min:8|confirmed',
         ]);
 
         if (!Hash::check($request->current_password, Auth::user()->password)) {

@@ -3,6 +3,9 @@
 @php
     $image = $act->images->first();
     $bg = $act->getBgClass();
+    $schedules = $act->schedules;
+    $firstSchedule = $schedules->first();
+    $remainingCount = $schedules->count() - 1;
 @endphp
 
 <div class="activity-mgmt-card" id="activity-card-{{ $act->id }}">
@@ -19,11 +22,12 @@
 
         {{-- Actions overlay --}}
         <div class="activity-actions-overlay">
-            <button onclick="openEditActivityModal({{ $act->id }}, {{ $act->toJson() }})" class="icon-btn edit-btn"
-                title="Edit">
+            <button onclick="openEditActivityModal({{ $act->id }}, {{ $act->toJson() }})"
+                class="icon-btn edit-btn" title="Edit">
                 <span class="material-icons">edit</span>
             </button>
-            <button onclick="deleteActivity({{ $act->id }})" class="icon-btn delete-btn" title="Delete">
+            <button onclick="deleteActivity({{ $act->id }})"
+                class="icon-btn delete-btn" title="Delete">
                 <span class="material-icons">delete</span>
             </button>
         </div>
@@ -48,7 +52,7 @@
         <div class="flex flex-wrap gap-1.5 mb-3">
             <span class="pill">${{ number_format($act->price, 0) }}/session</span>
             @if($act->min_age || $act->max_age)
-                <span class="pill">Ages {{ $act->min_age ?? '0' }}{{ $act->max_age ? '–' . $act->max_age : '+' }}</span>
+                <span class="pill">Ages {{ $act->min_age ?? '0' }}{{ $act->max_age ? '–'.$act->max_age : '+' }}</span>
             @else
                 <span class="pill">All ages</span>
             @endif
@@ -59,22 +63,31 @@
         </div>
 
         {{-- Schedules --}}
-        @if($act->schedules->count() > 0)
-            <div class="schedules-list">
-                @foreach($act->schedules as $schedule)
-                    <div class="schedule-item">
-                        <span class="schedule-day">{{ ucfirst($schedule->day_of_week) }}</span>
-                        <span class="schedule-time">
-                            {{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }}
-                            –
-                            {{ \Carbon\Carbon::parse($schedule->end_time)->format('H:i') }}
-                        </span>
-                    </div>
-                @endforeach
-            </div>
-        @else
-            <p class="text-xs" style="color:#b0a898">No schedules added</p>
-        @endif
+        <div class="schedules-list">
+            @if($firstSchedule)
+                <div class="schedule-item">
+                    <span class="schedule-day">{{ ucfirst($firstSchedule->day_of_week) }}</span>
+                    <span class="schedule-time">
+                        {{ \Carbon\Carbon::parse($firstSchedule->start_time)->format('H:i') }}
+                        –
+                        {{ \Carbon\Carbon::parse($firstSchedule->end_time)->format('H:i') }}
+                    </span>
+                </div>
+                @if($remainingCount > 0)
+                    <button onclick="showAllSchedules({{ $act->id }}, '{{ addslashes($act->title) }}')"
+                        class="show-more-btn">
+                        +{{ $remainingCount }} more {{ $remainingCount === 1 ? 'slot' : 'slots' }}
+                    </button>
+                @endif
+            @else
+                <p class="text-xs" style="color:#b0a898">No schedules added</p>
+            @endif
+        </div>
+
+        {{-- Hidden schedules data --}}
+        <script type="application/json" id="schedules-data-{{ $act->id }}">
+            {!! $schedules->toJson() !!}
+        </script>
     </div>
 
 </div>

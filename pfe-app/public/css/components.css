@@ -237,4 +237,16 @@ input[list]:focus {
     display: block;
 }
 
+/* Search Bar */
+.search-bar {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.25);
+    backdrop-filter: blur(12px);
+    border-radius: 999px;
+}
+
+.search-bar:focus-within {
+    border-color: rgba(212,163,80,0.7);
+}
+
 

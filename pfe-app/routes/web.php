@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BookingController;
 use App\Http\Controllers\FavouriteController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReviewController;
@@ -31,6 +32,9 @@ Route::get('/for-centers', [CenterController::class, 'index'])->name('for-center
 
 Route::get('/search', [SearchController::class, 'index'])->name('search');
 Route::post('/search', [SearchController::class, 'search'])->name('search.query');
+
+Route::get('/activities/{activity}', [ActivityController::class, 'show'])->name('activity.show');
+Route::post('/schedule/{schedule}/book', [BookingController::class, 'store'])->name('booking.store');
 
 Route::middleware('auth')->group(function () {
     Route::post('/activity/{activity}/favourite', [FavouriteController::class, 'toggle'])->name('activity.favourite');

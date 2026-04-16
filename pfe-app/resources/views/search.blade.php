@@ -18,7 +18,8 @@
                 <input type="text" id="search-input" placeholder='Try "karate for kids near Achrafieh"'
                     class="flex-1 bg-transparent text-white placeholder-white/30 text-sm outline-none py-1"
                     value="{{ request('q') }}">
-                <button onclick="doSearch()" class="search-btn px-5 py-2.5 text-sm font-medium whitespace-nowrap">
+                <button type="button" onclick="doSearch()"
+                    class="search-btn px-5 py-2.5 text-sm font-medium whitespace-nowrap">
                     Search
                 </button>
             </div>
@@ -65,6 +66,26 @@
                 const query = document.getElementById('search-input').value.trim();
                 if (!query) return;
 
+                // إذا قال "near me" نطلب الـ location
+                if (query.toLowerCase().includes('near me')) {
+                    if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(
+                            (position) => {
+                                executeSearch(query, position.coords.latitude, position.coords.longitude);
+                            },
+                            () => {
+                                // رفض الـ location — نبحث بدونه
+                                executeSearch(query, null, null);
+                            }
+                        );
+                        return;
+                    }
+                }
+
+                executeSearch(query, null, null);
+            }
+
+            async function executeSearch(query, lat, lng) {
                 // Update URL
                 history.pushState({}, '', `/search?q=${encodeURIComponent(query)}`);
 
@@ -79,10 +100,10 @@
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('[name=_token]').value,
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                             'Accept': 'application/json',
                         },
-                        body: JSON.stringify({ query }),
+                        body: JSON.stringify({ query, lat, lng }),
                     });
 
                     const data = await res.json();
@@ -102,6 +123,7 @@
                     document.getElementById('results-grid').innerHTML = data.html;
 
                 } catch (err) {
+                    console.error('Search error:', err);
                     document.getElementById('loading').classList.add('hidden');
                     document.getElementById('no-results').classList.remove('hidden');
                 }

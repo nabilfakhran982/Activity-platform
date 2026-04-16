@@ -26,7 +26,9 @@ class SearchController extends Controller
 
         // Category filter
         if (!empty($aiResponse['category_slug'])) {
-            $dbQuery->whereHas('category', fn($q) =>
+            $dbQuery->whereHas(
+                'category',
+                fn($q) =>
                 $q->where('slug', $aiResponse['category_slug'])
             );
         }
@@ -34,14 +36,16 @@ class SearchController extends Controller
         // Age filter — kids: max_age يصغّر، adults: min_age يكبر
         if (!empty($aiResponse['max_age'])) {
             // أي activity يكون min_age تبعها أقل أو يساوي max_age المطلوب
-            $dbQuery->where(fn($q) =>
+            $dbQuery->where(
+                fn($q) =>
                 $q->whereNull('min_age')->orWhere('min_age', '<=', $aiResponse['max_age'])
             );
         }
 
         if (!empty($aiResponse['min_age'])) {
             // أي activity يكون max_age تبعها أكبر أو يساوي min_age المطلوب أو null
-            $dbQuery->where(fn($q) =>
+            $dbQuery->where(
+                fn($q) =>
                 $q->whereNull('max_age')->orWhere('max_age', '>=', $aiResponse['min_age'])
             );
         }
@@ -49,9 +53,11 @@ class SearchController extends Controller
         // City/neighborhood filter
         if (!empty($aiResponse['city'])) {
             $city = $aiResponse['city'];
-            $dbQuery->whereHas('center', fn($q) =>
+            $dbQuery->whereHas(
+                'center',
+                fn($q) =>
                 $q->where('city', 'like', '%' . $city . '%')
-                  ->orWhere('address', 'like', '%' . $city . '%')
+                    ->orWhere('address', 'like', '%' . $city . '%')
             );
         }
 
@@ -63,25 +69,50 @@ class SearchController extends Controller
         // Keyword filter
         if (!empty($aiResponse['keyword'])) {
             $keyword = $aiResponse['keyword'];
-            $dbQuery->where(fn($q) =>
+            $dbQuery->where(
+                fn($q) =>
                 $q->where('title', 'like', '%' . $keyword . '%')
-                  ->orWhere('description', 'like', '%' . $keyword . '%')
+                    ->orWhere('description', 'like', '%' . $keyword . '%')
             );
         }
 
         // Day of week filter — يدعم أكتر من يوم
         if (!empty($aiResponse['days_of_week']) && is_array($aiResponse['days_of_week'])) {
             $days = array_map('strtolower', $aiResponse['days_of_week']);
-            $dbQuery->whereHas('schedules', fn($q) =>
+            $dbQuery->whereHas(
+                'schedules',
+                fn($q) =>
                 $q->whereIn('day_of_week', $days)
             );
         } elseif (!empty($aiResponse['day_of_week'])) {
-            $dbQuery->whereHas('schedules', fn($q) =>
+            $dbQuery->whereHas(
+                'schedules',
+                fn($q) =>
                 $q->where('day_of_week', strtolower($aiResponse['day_of_week']))
             );
         }
 
         $activities = $dbQuery->get();
+
+        $userLat = $request->input('lat');
+        $userLng = $request->input('lng');
+
+        $activities = $dbQuery->get();
+
+        if ($userLat && $userLng) {
+            $activities = $activities->sortBy(function ($act) use ($userLat, $userLng) {
+                $centerLat = $act->center->lat;
+                $centerLng = $act->center->lng;
+                if (!$centerLat || !$centerLng)
+                    return 999999;
+                $dLat = deg2rad($centerLat - $userLat);
+                $dLng = deg2rad($centerLng - $userLng);
+                $a = sin($dLat / 2) * sin($dLat / 2) +
+                    cos(deg2rad($userLat)) * cos(deg2rad($centerLat)) *
+                    sin($dLng / 2) * sin($dLng / 2);
+                return 6371 * 2 * atan2(sqrt($a), sqrt(1 - $a));
+            });
+        }
 
         // نبني الـ HTML بالـ server باستخدام الـ component
         $html = '';
@@ -90,10 +121,10 @@ class SearchController extends Controller
         }
 
         return response()->json([
-            'html'       => $html,
-            'count'      => $activities->count(),
+            'html' => $html,
+            'count' => $activities->count(),
             'ai_summary' => $aiResponse['summary'] ?? null,
-            'parsed'     => $aiResponse,
+            'parsed' => $aiResponse,
         ]);
     }
 
@@ -137,16 +168,16 @@ PROMPT;
 
         try {
             $response = Http::withHeaders([
-                'x-api-key'         => config('services.anthropic.key'),
+                'x-api-key' => config('services.anthropic.key'),
                 'anthropic-version' => '2023-06-01',
-                'content-type'      => 'application/json',
+                'content-type' => 'application/json',
             ])->post('https://api.anthropic.com/v1/messages', [
-                'model'      => 'claude-haiku-4-5-20251001',
-                'max_tokens' => 400,
-                'messages'   => [
-                    ['role' => 'user', 'content' => $prompt]
-                ],
-            ]);
+                        'model' => 'claude-haiku-4-5-20251001',
+                        'max_tokens' => 400,
+                        'messages' => [
+                            ['role' => 'user', 'content' => $prompt]
+                        ],
+                    ]);
 
             \Log::info('Anthropic raw response: ', $response->json());
 
