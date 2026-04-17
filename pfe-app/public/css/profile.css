@@ -48,7 +48,56 @@
     border-bottom: 1px solid #F0EDE6;
 }
 
-/* Bookings */
+/* Carousel */
+.carousel-wrapper {
+    overflow: hidden;
+    position: relative;
+}
+
+.carousel-track {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+    /* إخفاء الـ scrollbar */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.carousel-track::-webkit-scrollbar {
+    display: none;
+}
+
+.carousel-arrow {
+    width: 32px;
+    height: 32px;
+    background: #fff;
+    border: 1px solid #E8E5DF;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #5a5751;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.carousel-arrow:hover {
+    background: #1a1a18;
+    border-color: #1a1a18;
+    color: #fff;
+}
+
+/* Booking slide */
+.booking-slide {
+    flex: 0 0 100%;
+    scroll-snap-align: start;
+}
+
 .booking-card {
     background: #fff;
     border: 1px solid #E8E5DF;
@@ -88,28 +137,12 @@
     flex-shrink: 0;
 }
 
-/* Review button */
-.review-btn {
-    background: none;
-    border: 1px solid #D4A350;
-    color: #D4A350;
-    border-radius: 999px;
-    padding: 4px 12px;
-    font-size: 11px;
-    font-weight: 500;
-    cursor: pointer;
-    font-family: 'DM Sans', sans-serif;
-    transition: all 0.2s;
-    display: block;
-    white-space: nowrap;
+/* Fav slide */
+.fav-slide {
+    flex: 0 0 calc(50% - 6px);
+    scroll-snap-align: start;
 }
 
-.review-btn:hover {
-    background: #D4A350;
-    color: #1a1a18;
-}
-
-/* Favourites */
 .fav-card {
     background: #fff;
     border: 1px solid #E8E5DF;
@@ -171,7 +204,28 @@
     transform: scale(1.1);
 }
 
-/* Status badge */
+/* Review button */
+.review-btn {
+    background: none;
+    border: 1px solid #D4A350;
+    color: #D4A350;
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+    display: block;
+    white-space: nowrap;
+}
+
+.review-btn:hover {
+    background: #D4A350;
+    color: #1a1a18;
+}
+
+/* Status badges */
 .status-badge {
     font-size: 11px;
     padding: 3px 10px;

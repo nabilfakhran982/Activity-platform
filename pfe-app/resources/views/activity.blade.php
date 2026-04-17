@@ -228,8 +228,11 @@
     {{-- Booking Confirmation Modal --}}
     <div id="booking-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;z-index:9999;padding:16px">
         <div style="background:#fff;border-radius:20px;padding:32px;max-width:420px;width:100%;text-align:center">
-            <div style="width:56px;height:56px;background:rgba(212,163,80,0.12);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:24px">
-                📅
+            <div style="width:56px;height:56px;background:rgba(212,163,80,0.12);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+                <svg width="26" height="26" fill="none" stroke="#D4A350" stroke-width="1.5" viewBox="0 0 24 24">
+                    <rect x="3" y="4" width="18" height="18" rx="2"/>
+                    <path d="M16 2v4M8 2v4M3 10h18"/>
+                </svg>
             </div>
             <h3 class="font-display text-xl font-bold mb-2">Confirm Booking</h3>
             <p class="text-sm mb-1" style="color:#5a5751">{{ $activity->title }}</p>

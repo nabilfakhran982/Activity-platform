@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Booking;
 use App\Models\Category;
 use App\Models\Center;
 use App\Models\User;
@@ -72,15 +73,24 @@ class CenterController extends Controller
 
         $totalActivities = $centers->sum('activities_count');
 
-        $totalBookings = \App\Models\Booking::whereHas('schedule.activity', function ($q) use ($centers) {
+        $totalBookings = Booking::whereHas('schedule.activity', function ($q) use ($centers) {
             $q->whereIn('center_id', $centers->pluck('id'));
         })->count();
 
-        $pendingBookings = \App\Models\Booking::whereHas('schedule.activity', function ($q) use ($centers) {
+        $pendingBookings = Booking::whereHas('schedule.activity', function ($q) use ($centers) {
             $q->whereIn('center_id', $centers->pluck('id'));
         })->where('status', 'pending')->count();
 
-        return view('center.dashboard', compact('centers', 'totalActivities', 'totalBookings', 'pendingBookings'));
+        $pendingBookingsList = Booking::whereHas(
+            'schedule.activity.center',
+            fn($q) =>
+            $q->where('user_id', auth()->id())
+        )->where('status', 'pending')
+            ->with(['schedule.activity.center', 'user'])
+            ->latest()
+            ->get();
+
+        return view('center.dashboard', compact('centers', 'totalActivities', 'totalBookings', 'pendingBookings', 'pendingBookingsList'));
     }
 
     public function update(Request $request, Center $center)

@@ -21,15 +21,23 @@ class BookingController extends Controller
         }
 
         $booking = Booking::create([
-            'user_id'     => Auth::id(),
+            'user_id' => Auth::id(),
             'schedule_id' => $schedule->id,
-            'status'      => 'pending',
-            'notes'       => null,
+            'status' => 'pending',
+            'booking_date' => now()->toDateString(),
+            'notes' => null,
         ]);
 
         return response()->json([
             'success' => true,
             'booking' => $booking,
         ]);
+    }
+
+    public function updateStatus(Request $request, Booking $booking)
+    {
+        $request->validate(['status' => 'required|in:confirmed,cancelled']);
+        $booking->update(['status' => $request->status]);
+        return response()->json(['success' => true]);
     }
 }

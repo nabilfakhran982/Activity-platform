@@ -93,7 +93,19 @@
 
                 {{-- Bookings --}}
                 <div>
-                    <h2 class="font-display text-xl font-bold mb-4">My Bookings</h2>
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="font-display text-xl font-bold">My Bookings</h2>
+                        @if(!$user->bookings->isEmpty())
+                        <div class="flex gap-2">
+                            <button onclick="scrollCarousel('bookings-track', -1)" class="carousel-arrow" id="bookings-prev">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+                            </button>
+                            <button onclick="scrollCarousel('bookings-track', 1)" class="carousel-arrow" id="bookings-next">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+                            </button>
+                        </div>
+                        @endif
+                    </div>
 
                     @if($user->bookings->isEmpty())
                         <div class="no-results">
@@ -106,63 +118,74 @@
                             <p class="text-sm"><a href="{{ route('activities') }}" class="text-[#D4A350]">Browse activities</a></p>
                         </div>
                     @else
-                        <div class="space-y-3">
-                            @foreach($user->bookings->sortByDesc('created_at') as $booking)
-                                @php $act = $booking->schedule?->activity; @endphp
-                                @if($act)
-                                <div class="booking-card">
-                                    {{-- Image --}}
-                                    @php $img = $act->images->first(); @endphp
-                                    <div class="booking-img">
-                                        @if($img)
-                                            <img src="{{ asset($img->image_path) }}" alt="{{ $act->title }}">
-                                        @else
-                                            <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:24px;background:#F0EDE6">
-                                                {{ $act->category->icon ?? '🏃' }}
+                        <div class="carousel-wrapper">
+                            <div class="carousel-track" id="bookings-track">
+                                @foreach($user->bookings->sortByDesc('created_at') as $booking)
+                                    @php $act = $booking->schedule?->activity; @endphp
+                                    @if($act)
+                                    <div class="booking-slide">
+                                        @php $img = $act->images->first(); @endphp
+                                        <div class="booking-card">
+                                            <div class="booking-img">
+                                                @if($img)
+                                                    <img src="{{ asset($img->image_path) }}" alt="{{ $act->title }}">
+                                                @else
+                                                    <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:24px;background:#F0EDE6">
+                                                        {{ $act->category->icon ?? '🏃' }}
+                                                    </div>
+                                                @endif
                                             </div>
-                                        @endif
-                                    </div>
-                                    <div class="booking-info">
-                                        <h3 class="font-display font-bold text-sm leading-snug">{{ $act->title }}</h3>
-                                        <p class="text-xs mt-0.5" style="color:#8a7a6a">{{ $act->center->name }} · {{ $act->center->city }}</p>
-                                        @if($booking->schedule)
-                                            <p class="text-xs mt-1" style="color:#a09890">
-                                                {{ ucfirst($booking->schedule->day_of_week) }}
-                                                {{ \Carbon\Carbon::parse($booking->schedule->start_time)->format('H:i') }}
-                                            </p>
-                                        @endif
-                                    </div>
-                                    <div class="booking-status">
-                                        <span class="status-badge {{ $booking->status === 'confirmed' ? 'active' : ($booking->status === 'cancelled' ? 'inactive' : '') }}"
-                                            style="{{ $booking->status === 'pending' ? 'background:rgba(212,163,80,0.12);color:#8a6020;border:1px solid rgba(212,163,80,0.4)' : '' }}">
-                                            {{ ucfirst($booking->status) }}
-                                        </span>
-                                        <p class="text-xs mt-1" style="color:#c0b8b0">{{ $booking->created_at->diffForHumans() }}</p>
-
-                                        {{-- Review --}}
-                                        @if($booking->status === 'confirmed' && !$booking->review)
-                                            <button onclick="openReviewModal({{ $booking->id }}, '{{ addslashes($act->title) }}')"
-                                                class="review-btn mt-2">
-                                                ★ Leave a Review
-                                            </button>
-                                        @elseif($booking->review)
-                                            <div class="mt-2 flex items-center gap-0.5">
-                                                @for($i = 1; $i <= 5; $i++)
-                                                    <span style="color:{{ $i <= $booking->review->rating ? '#D4A350' : '#E8E5DF' }};font-size:13px">★</span>
-                                                @endfor
+                                            <div class="booking-info">
+                                                <h3 class="font-display font-bold text-sm leading-snug">{{ $act->title }}</h3>
+                                                <p class="text-xs mt-0.5" style="color:#8a7a6a">{{ $act->center->name }} · {{ $act->center->city }}</p>
+                                                @if($booking->schedule)
+                                                    <p class="text-xs mt-1" style="color:#a09890">
+                                                        {{ ucfirst($booking->schedule->day_of_week) }}
+                                                        {{ \Carbon\Carbon::parse($booking->schedule->start_time)->format('H:i') }}
+                                                    </p>
+                                                @endif
                                             </div>
-                                        @endif
+                                            <div class="booking-status">
+                                                <span class="status-badge {{ $booking->status === 'confirmed' ? 'active' : ($booking->status === 'cancelled' ? 'inactive' : '') }}"
+                                                    style="{{ $booking->status === 'pending' ? 'background:rgba(212,163,80,0.12);color:#8a6020;border:1px solid rgba(212,163,80,0.4)' : '' }}">
+                                                    {{ ucfirst($booking->status) }}
+                                                </span>
+                                                <p class="text-xs mt-1" style="color:#c0b8b0">{{ $booking->created_at->diffForHumans() }}</p>
+                                                @if($booking->status === 'confirmed' && !$booking->review)
+                                                    <button onclick="openReviewModal({{ $booking->id }}, '{{ addslashes($act->title) }}')"
+                                                        class="review-btn mt-2">★ Leave a Review</button>
+                                                @elseif($booking->review)
+                                                    <div class="mt-2 flex items-center gap-0.5">
+                                                        @for($i = 1; $i <= 5; $i++)
+                                                            <span style="color:{{ $i <= $booking->review->rating ? '#D4A350' : '#E8E5DF' }};font-size:13px">★</span>
+                                                        @endfor
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                                @endif
-                            @endforeach
+                                    @endif
+                                @endforeach
+                            </div>
                         </div>
                     @endif
                 </div>
 
                 {{-- Favourites --}}
                 <div>
-                    <h2 class="font-display text-xl font-bold mb-4">Saved Activities</h2>
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="font-display text-xl font-bold">Saved Activities</h2>
+                        @if(!$user->favourites->isEmpty())
+                        <div class="flex gap-2">
+                            <button onclick="scrollCarousel('favs-track', -1)" class="carousel-arrow">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+                            </button>
+                            <button onclick="scrollCarousel('favs-track', 1)" class="carousel-arrow">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+                            </button>
+                        </div>
+                        @endif
+                    </div>
 
                     @if($user->favourites->isEmpty())
                         <div class="no-results">
@@ -175,41 +198,41 @@
                             <p class="text-sm"><a href="{{ route('activities') }}" class="text-[#D4A350]">Explore activities</a></p>
                         </div>
                     @else
-                        <div class="grid grid-cols-2 gap-4">
-                            @foreach($user->favourites as $fav)
-                                @php
-                                    $act = $fav->activity;
-                                    $img = $act?->images->first();
-                                @endphp
-                                @if($act)
-                                <div class="fav-card" id="fav-card-{{ $act->id }}">
-                                    <div class="fav-img">
-                                        @if($img)
-                                            <img src="{{ asset($img->image_path) }}" alt="{{ $act->title }}">
-                                        @else
-                                            <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:32px;background:#F0EDE6">
-                                                {{ $act->category->icon ?? '🏃' }}
+                        <div class="carousel-wrapper">
+                            <div class="carousel-track" id="favs-track">
+                                @foreach($user->favourites as $fav)
+                                    @php $act = $fav->activity; $img = $act?->images->first(); @endphp
+                                    @if($act)
+                                    <div class="fav-slide">
+                                        <div class="fav-card" id="fav-card-{{ $act->id }}">
+                                            <div class="fav-img">
+                                                @if($img)
+                                                    <img src="{{ asset($img->image_path) }}" alt="{{ $act->title }}">
+                                                @else
+                                                    <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:32px;background:#F0EDE6">
+                                                        {{ $act->category->icon ?? '🏃' }}
+                                                    </div>
+                                                @endif
+                                                <div class="fav-overlay">
+                                                    <button onclick="removeFavourite({{ $act->id }}, this)" class="fav-delete-btn" title="Remove">
+                                                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                            <polyline points="3 6 5 6 21 6"/>
+                                                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                                                            <path d="M10 11v6M14 11v6"/>
+                                                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                                                        </svg>
+                                                    </button>
+                                                </div>
                                             </div>
-                                        @endif
-                                        <div class="fav-overlay">
-                                            <button onclick="removeFavourite({{ $act->id }}, this)"
-                                                class="fav-delete-btn" title="Remove">
-                                                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                                    <polyline points="3 6 5 6 21 6"/>
-                                                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                                                    <path d="M10 11v6M14 11v6"/>
-                                                    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-                                                </svg>
-                                            </button>
+                                            <div class="p-3">
+                                                <h3 class="font-display font-bold text-sm leading-snug mb-0.5">{{ $act->title }}</h3>
+                                                <p class="text-xs" style="color:#8a7a6a">${{ number_format($act->price, 0) }}/session</p>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="p-3">
-                                        <h3 class="font-display font-bold text-sm leading-snug mb-0.5">{{ $act->title }}</h3>
-                                        <p class="text-xs" style="color:#8a7a6a">${{ number_format($act->price, 0) }}/session</p>
-                                    </div>
-                                </div>
-                                @endif
-                            @endforeach
+                                    @endif
+                                @endforeach
+                            </div>
                         </div>
                     @endif
                 </div>
@@ -220,6 +243,14 @@
 
     @push('scripts')
     <script>
+        // ============ Carousel ============
+        function scrollCarousel(trackId, direction) {
+            const track = document.getElementById(trackId);
+            if (!track) return;
+            const slideWidth = track.querySelector('[class$="-slide"]')?.offsetWidth + 12 || 320;
+            track.scrollBy({ left: direction * slideWidth, behavior: 'smooth' });
+        }
+
         // ============ Update profile ============
         document.getElementById('profile-form').addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -259,7 +290,7 @@
         });
 
         // ============ Remove favourite ============
-        async function removeFavourite(activityId, btn) {
+        async function removeFavourite(activityId) {
             const res = await fetch(`/activity/${activityId}/favourite`, {
                 method: 'POST',
                 headers: {
@@ -271,19 +302,12 @@
             if (res.ok) {
                 const card = document.getElementById(`fav-card-${activityId}`);
                 if (card) {
-                    card.style.opacity = '0';
-                    card.style.transition = 'opacity 0.3s';
-                    setTimeout(() => {
-                        card.remove();
-                        const grid = document.querySelector('.grid.grid-cols-2');
-                        if (grid && grid.querySelectorAll('.fav-card').length === 0) {
-                            grid.outerHTML = `
-                                <div class="no-results">
-                                    <p class="font-medium mb-1">No saved activities</p>
-                                    <p class="text-sm"><a href="/activities" class="text-[#D4A350]">Explore activities</a></p>
-                                </div>`;
-                        }
-                    }, 300);
+                    const slide = card.closest('[class$="-slide"]');
+                    if (slide) {
+                        slide.style.opacity = '0';
+                        slide.style.transition = 'opacity 0.3s';
+                        setTimeout(() => slide.remove(), 300);
+                    }
                 }
             }
         }

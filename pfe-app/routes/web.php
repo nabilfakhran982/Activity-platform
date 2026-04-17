@@ -36,6 +36,8 @@ Route::post('/search', [SearchController::class, 'search'])->name('search.query'
 Route::get('/activities/{activity}', [ActivityController::class, 'show'])->name('activity.show');
 Route::post('/schedule/{schedule}/book', [BookingController::class, 'store'])->name('booking.store');
 
+Route::post('/booking/{booking}/status', [BookingController::class, 'updateStatus'])->middleware(['auth', 'center_owner']);
+
 Route::middleware('auth')->group(function () {
     Route::post('/activity/{activity}/favourite', [FavouriteController::class, 'toggle'])->name('activity.favourite');
     Route::post('/booking/{booking}/review', [ReviewController::class, 'store'])->name('booking.review');

@@ -277,3 +277,78 @@
     color: #e05252;
     box-shadow: 0 4px 16px rgba(224, 82, 82, 0.15);
 }
+
+/* Pending Bookings */
+.pending-booking-card {
+    background: #fff;
+    border: 1px solid #E8E5DF;
+    border-radius: 16px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: box-shadow 0.2s;
+}
+
+.pending-booking-card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+}
+
+.pending-booking-avatar {
+    width: 40px;
+    height: 40px;
+    background: #D4A350;
+    color: #1a1a18;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.pending-booking-info {
+    min-width: 140px;
+    flex-shrink: 0;
+}
+
+.pending-booking-activity {
+    flex: 1;
+    min-width: 0;
+}
+
+.booking-action-btn {
+    padding: 6px 16px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    border: none;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.confirm-btn {
+    background: rgba(93,202,165,0.12);
+    color: #0F6E56;
+    border: 1px solid rgba(93,202,165,0.4);
+}
+
+.confirm-btn:hover {
+    background: #0F6E56;
+    color: #fff;
+}
+
+.cancel-btn {
+    background: rgba(232,74,74,0.10);
+    color: #A32D2D;
+    border: 1px solid rgba(232,74,74,0.3);
+}
+
+.cancel-btn:hover {
+    background: #e05252;
+    color: #fff;
+}
