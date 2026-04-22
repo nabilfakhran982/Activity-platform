@@ -1,14 +1,16 @@
 :root {
-    --font-display: 'Playfair Display', serif;
-    --font-body: 'DM Sans', sans-serif;
+    --font-display: "Playfair Display", serif;
+    --font-body: "DM Sans", sans-serif;
 }
 html {
     scroll-behavior: smooth;
 }
 body {
     font-family: var(--font-body);
-    background: #F7F5F0;
+    background: #f7f5f0;
     color: #1a1a18;
 }
-.font-display { font-family: var(--font-display); }
+.font-display {
+    font-family: var(--font-display);
+}
 

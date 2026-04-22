@@ -46,7 +46,7 @@
     background: #fff;
     border: 1px solid #e8e5df;
     border-radius: 20px;
-    overflow: hidden;
+    overflow: visible !important;
     transition:
         transform 0.2s,
         box-shadow 0.2s;
@@ -71,6 +71,8 @@
     width: 100%;
     padding: 16px;
     padding-bottom: 0;
+    overflow: hidden;
+    border-radius: 20px 20px 0 0;
 }
 
 .center-card-header {
@@ -319,6 +321,11 @@
     min-width: 0;
 }
 
+.pending-slide {
+    flex: 0 0 100%;
+    scroll-snap-align: start;
+}
+
 .booking-action-btn {
     padding: 6px 16px;
     border-radius: 999px;
@@ -351,4 +358,247 @@
 .cancel-btn:hover {
     background: #e05252;
     color: #fff;
+}
+
+.carousel-wrapper {
+    overflow: hidden;
+    position: relative;
+}
+
+.carousel-track {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.carousel-track::-webkit-scrollbar {
+    display: none;
+}
+
+.carousel-arrow {
+    width: 32px;
+    height: 32px;
+    background: #fff;
+    border: 1px solid #E8E5DF;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #5a5751;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.carousel-arrow:hover {
+    background: #1a1a18;
+    border-color: #1a1a18;
+    color: #fff;
+}
+
+.pending-slide {
+    flex: 0 0 100%;
+    scroll-snap-align: start;
+}
+
+/* Bookings */
+.bookings-tabs {
+    display: flex;
+    gap: 4px;
+    background: #F0EDE6;
+    border-radius: 12px;
+    padding: 4px;
+    margin-bottom: 20px;
+}
+
+.booking-tab {
+    flex: 1;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 8px;
+    background: none;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: #8a7a6a;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.booking-tab.active {
+    background: #fff;
+    color: #1a1a18;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+.tab-badge {
+    background: #D4A350;
+    color: #1a1a18;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 6px;
+}
+
+.bookings-section.hidden {
+    display: none;
+}
+
+.booking-row {
+    background: #fff;
+    border: 1px solid #E8E5DF;
+    border-radius: 14px;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: box-shadow 0.2s;
+    flex-wrap: wrap;
+}
+
+.booking-row:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+}
+
+.booking-row-avatar {
+    width: 38px;
+    height: 38px;
+    background: #D4A350;
+    color: #1a1a18;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.booking-row-user {
+    min-width: 120px;
+    flex-shrink: 0;
+}
+
+.booking-row-activity {
+    flex: 1;
+    min-width: 120px;
+}
+
+.no-results {
+    text-align: center;
+    padding: 40px 20px;
+    color: #a09890;
+    background: #FAFAF8;
+    border-radius: 16px;
+    border: 1px dashed #E8E5DF;
+}
+
+@media (max-width: 640px) {
+    .booking-row {
+        gap: 10px;
+    }
+
+    .booking-row-avatar {
+        display: none;
+    }
+
+    .booking-row-user {
+        min-width: unset;
+        flex: 1;
+    }
+
+    .booking-row-activity {
+        width: 100%;
+        flex: unset;
+    }
+
+    .booking-action-btn {
+        padding: 5px 10px;
+        font-size: 11px;
+    }
+
+    .bookings-tabs {
+        font-size: 11px;
+    }
+
+    .booking-tab {
+        padding: 6px 8px;
+        font-size: 11px;
+    }
+
+    .stat-card {
+        padding: 16px 8px;
+    }
+
+    .stat-number {
+        font-size: 24px;
+    }
+}
+
+.actions-wrapper {
+    position: relative; /* مرجع للبادج */
+}
+
+.bookings-section {
+    max-height: 60vh;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #E8E5DF transparent;
+    padding-right: 4px;
+}
+
+.bookings-section::-webkit-scrollbar {
+    width: 4px;
+}
+
+.bookings-section::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.bookings-section::-webkit-scrollbar-thumb {
+    background: #E8E5DF;
+    border-radius: 999px;
+}
+
+
+/* لو تريد البادج بالنسبة للزر فقط استخدم .bookings-btn { position: relative; } بدل .actions-wrapper */
+
+.pending-badge {
+    position: absolute;
+    top: -10px;      /* يرفع البادج فوق الزر */
+    right: 12px;     /* يضعه على يمين الزر */
+    z-index: 20;
+    background: #D4A350;
+    color: #1a1a18;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    min-width: 18px;
+    text-align: center;
+    line-height: 1;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Responsive tweak لو المساحة ضيقة */
+@media (max-width: 480px) {
+    .pending-badge {
+        top: -6px;
+        right: 6px;
+        padding: 1px 6px;
+        font-size: 9px;
+    }
 }

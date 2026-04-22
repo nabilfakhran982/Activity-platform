@@ -81,16 +81,7 @@ class CenterController extends Controller
             $q->whereIn('center_id', $centers->pluck('id'));
         })->where('status', 'pending')->count();
 
-        $pendingBookingsList = Booking::whereHas(
-            'schedule.activity.center',
-            fn($q) =>
-            $q->where('user_id', auth()->id())
-        )->where('status', 'pending')
-            ->with(['schedule.activity.center', 'user'])
-            ->latest()
-            ->get();
-
-        return view('center.dashboard', compact('centers', 'totalActivities', 'totalBookings', 'pendingBookings', 'pendingBookingsList'));
+        return view('center.dashboard', compact('centers', 'totalActivities', 'totalBookings', 'pendingBookings'));
     }
 
     public function update(Request $request, Center $center)
@@ -126,5 +117,18 @@ class CenterController extends Controller
     {
         $center->update(['is_active' => !$center->is_active]);
         return response()->json(['is_active' => $center->is_active]);
+    }
+
+    public function bookings(Center $center)
+    {
+        $bookings = Booking::whereHas(
+            'schedule.activity',
+            fn($q) =>
+            $q->where('center_id', $center->id)
+        )->with(['schedule.activity', 'user', 'review'])
+            ->latest()
+            ->get();
+
+        return view('center.bookings', compact('center', 'bookings'));
     }
 }

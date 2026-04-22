@@ -7,9 +7,16 @@ use Illuminate\Database\Eloquent\Model;
 class Center extends Model
 {
     protected $fillable = [
-        'user_id', 'name', 'description',
-        'address', 'city', 'phone',
-        'lat', 'lng', 'logo', 'is_active'
+        'user_id',
+        'name',
+        'description',
+        'address',
+        'city',
+        'phone',
+        'lat',
+        'lng',
+        'logo',
+        'is_active'
     ];
 
     public function user()

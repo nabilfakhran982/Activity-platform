@@ -36,8 +36,23 @@ class BookingController extends Controller
 
     public function updateStatus(Request $request, Booking $booking)
     {
-        $request->validate(['status' => 'required|in:confirmed,cancelled']);
+        $request->validate(['status' => 'required|in:pending,confirmed,cancelled']);
         $booking->update(['status' => $request->status]);
+        return response()->json(['success' => true]);
+    }
+
+    public function destroy(Booking $booking)
+    {
+        if ($booking->user_id !== auth()->id()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        // confirmed with review — ما يحذف
+        if ($booking->status === 'confirmed' && $booking->review) {
+            return response()->json(['error' => 'Cannot delete a reviewed booking.'], 422);
+        }
+
+        $booking->delete();
         return response()->json(['success' => true]);
     }
 }
