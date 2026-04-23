@@ -24,30 +24,34 @@ class SearchController extends Controller
         $dbQuery = Activity::with(['center', 'category', 'reviews', 'images', 'schedules', 'favourites'])
             ->where('is_active', true);
 
-        // Category filter
+        // Category filter — يدعم فئة واحدة أو فئات متعددة مفصولة بفاصلة
         if (!empty($aiResponse['category_slug'])) {
+            $slugs = explode(',', $aiResponse['category_slug']); // تحويل النص إلى مصفوفة
+
             $dbQuery->whereHas(
                 'category',
-                fn($q) =>
-                $q->where('slug', $aiResponse['category_slug'])
+                fn($q) => $q->whereIn('slug', $slugs) // استخدام whereIn بدل where
             );
         }
 
-        // Age filter — kids: max_age يصغّر، adults: min_age يكبر
-        if (!empty($aiResponse['max_age'])) {
-            // أي activity يكون min_age تبعها أقل أو يساوي max_age المطلوب
-            $dbQuery->where(
-                fn($q) =>
-                $q->whereNull('min_age')->orWhere('min_age', '<=', $aiResponse['max_age'])
-            );
-        }
+        // 2. فلتر العمر الاحترافي (Inclusive Age Filter)
+        // هيدا اللوجيك بيضمن إنو الـ All Ages دايماً يبيّنوا
+        if (!empty($aiResponse['min_age']) || !empty($aiResponse['max_age'])) {
+            $targetAge = $aiResponse['min_age'] ?? $aiResponse['max_age'];
 
-        if (!empty($aiResponse['min_age'])) {
-            // أي activity يكون max_age تبعها أكبر أو يساوي min_age المطلوب أو null
-            $dbQuery->where(
-                fn($q) =>
-                $q->whereNull('max_age')->orWhere('max_age', '>=', $aiResponse['min_age'])
-            );
+            $dbQuery->where(function ($q) use ($targetAge) {
+                $q->where(function ($sub) use ($targetAge) {
+                    // شرط البداية: لازم الكورس يبلش بعمرك أو أصغر (أو يكون للكل Null/0)
+                    $sub->whereNull('min_age')
+                        ->orWhere('min_age', '<=', $targetAge)
+                        ->orWhere('min_age', 0);
+                })->where(function ($sub) use ($targetAge) {
+                    // شرط النهاية: لازم الكورس يخلص بعمرك أو أكبر (أو يكون للكل Null/0)
+                    $sub->whereNull('max_age')
+                        ->orWhere('max_age', '>=', $targetAge)
+                        ->orWhere('max_age', 0);
+                });
+            });
         }
 
         // City/neighborhood filter
@@ -93,11 +97,17 @@ class SearchController extends Controller
         }
 
         $activities = $dbQuery->get();
+        // هيدا السطر رح يطبعلك الـ SQL اللي عم يتنفذ فعلياً في الـ Log
+        \Log::info('Final SQL: ' . $dbQuery->toSql());
+        \Log::info('Bindings: ', $dbQuery->getBindings());
+
+        // Sort by average rating (highest first)
+        $activities = $activities->sortByDesc(function ($act) {
+            return $act->reviews->avg('rating') ?? 0;
+        });
 
         $userLat = $request->input('lat');
         $userLng = $request->input('lng');
-
-        $activities = $dbQuery->get();
 
         if ($userLat && $userLng) {
             $activities = $activities->sortBy(function ($act) use ($userLat, $userLng) {
@@ -155,13 +165,23 @@ Available cities: {$cities}
 
 Rules:
 - If user mentions "kids", "children", "child", "boy", "girl" → set max_age to 12, min_age to null
-- If user mentions "adults" or "adult" → set min_age to 16, max_age to null
+- If user mentions "adults" or "adult" AND no specific activity is mentioned, OR "boxing adult" specifically → set min_age to 14, max_age to null
+- If user methions "all" → set min_age and max_age to null
+- If user mentions "adults" or "adult" with another activity (not boxing) → set min_age to 16, max_age to null
 - If user mentions a neighborhood (Achrafieh, Hamra, Gemmayzeh, Mar Mikhael, etc.) → put it in "city" as-is
 - If user mentions ONE day → use "day_of_week" field
 - If user mentions MULTIPLE days → use "days_of_week" array (e.g. ["thursday", "wednesday"])
 - Day abbreviations: "tues"/"tue" = tuesday, "wed" = wednesday, "thur"/"thurs"/"thues" = thursday, "sat" = saturday, "sun" = sunday, "mon" = monday, "fri" = friday
 - If user mentions "private" or "one-on-one" → set is_private to true
 - Return ONLY the JSON, no markdown, no explanation
+- MOOD MAPPING:
+  * "relaxing", "calm", "chill", "unwind", "stress relief" → set category_slug to "pilates-yoga"
+  * "energetic", "intense", "burn", "sweat" → set category_slug to "fitness-gym,boxing" (return them comma-separated)
+  * "creative", "artistic", "fun for kids" → set category_slug to "arts-crafts"
+  * "discipline", "focus", "confidence" → set category_slug to "martial-arts"
+  * "outdoor", "nature", "adventure" → set category_slug to adventure-outdoor
+- If user says a SPECIFIC activity (e.g. "boxing", "karate"), use that category regardless of mood words
+- If NO specific activity AND mood words are present, map to the category and set keyword accordingly
 
 User query: "{$query}"
 PROMPT;

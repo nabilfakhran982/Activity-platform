@@ -253,8 +253,6 @@ class ActivityController extends Controller
 
     public function toggleActive(Activity $activity)
     {
-        if ($activity->center->user_id !== Auth::id())
-            abort(403);
         $activity->update(['is_active' => !$activity->is_active]);
         return response()->json(['is_active' => $activity->is_active]);
     }

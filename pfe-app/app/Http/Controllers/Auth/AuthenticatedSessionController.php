@@ -26,17 +26,24 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
 
+        // تحقق من الـ is_active
+        if (!Auth::user()->is_active) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            return back()->withErrors(['email' => 'Your account has been deactivated. Please contact support.']);
+        }
+
         $request->session()->regenerate();
 
         $user = Auth::user();
 
         return match ($user->role) {
-            'admin'        => redirect()->route('admin.dashboard'),
+            'admin' => redirect()->route('admin.dashboard'),
             'center_owner' => redirect()->route('center.dashboard'),
-            default        => redirect()->route('home'),
+            default => redirect()->route('home'),
         };
     }
-
     /**
      * Destroy an authenticated session.
      */

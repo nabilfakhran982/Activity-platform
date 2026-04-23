@@ -17,4 +17,9 @@ class Review extends Model
     {
         return $this->belongsTo(Activity::class);
     }
+
+    public function booking()
+    {
+        return $this->belongsTo(Booking::class);
+    }
 }

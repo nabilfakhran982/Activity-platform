@@ -14,13 +14,13 @@ class AdminController extends Controller
     public function dashboard()
     {
         $stats = [
-            'users'      => User::count(),
-            'centers'    => Center::count(),
+            'users' => User::count(),
+            'centers' => Center::count(),
             'activities' => Activity::count(),
-            'bookings'   => Booking::count(),
+            'bookings' => Booking::count(),
         ];
 
-        $recentUsers    = User::latest()->take(5)->get();
+        $recentUsers = User::latest()->take(5)->get();
         $recentBookings = Booking::with(['user', 'schedule.activity.center'])->latest()->take(5)->get();
 
         return view('admin.dashboard', compact('stats', 'recentUsers', 'recentBookings'));
@@ -35,10 +35,12 @@ class AdminController extends Controller
 
     public function toggleUser(User $user)
     {
+        if ($user->role === 'admin') {
+            return response()->json(['error' => 'Cannot deactivate admin'], 403);
+        }
         $user->update(['is_active' => !$user->is_active]);
         return response()->json(['is_active' => $user->is_active]);
     }
-
     public function destroyUser(User $user)
     {
         if ($user->role === 'admin') {
@@ -74,11 +76,23 @@ class AdminController extends Controller
         return view('admin.activities', compact('activities'));
     }
 
+    public function toggleActive(Activity $activity)
+    {
+        $activity->update(['is_active' => !$activity->is_active]);
+        return response()->json(['is_active' => $activity->is_active]);
+    }
+
+    public function destroy(Activity $activity)
+    {
+        $activity->delete();
+        return response()->json(['success' => true]);
+    }
+
     // ===== BOOKINGS =====
     public function bookings()
     {
-        $bookings  = Booking::with(['user', 'schedule.activity.center'])->latest()->get();
-        $pending   = $bookings->where('status', 'pending');
+        $bookings = Booking::with(['user', 'schedule.activity.center'])->latest()->get();
+        $pending = $bookings->where('status', 'pending');
         $confirmed = $bookings->where('status', 'confirmed');
         $cancelled = $bookings->where('status', 'cancelled');
 
@@ -103,4 +117,6 @@ class AdminController extends Controller
     {
         return view('admin.profile');
     }
+
+
 }

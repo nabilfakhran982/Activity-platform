@@ -64,23 +64,25 @@ Route::middleware(['auth', 'center_owner'])->group(function () {
     Route::post('/activity/{activity}/toggle-active', [ActivityController::class, 'toggleActive'])->name('activity.toggle-active');
 
     Route::get('/center/{center}/bookings', [CenterController::class, 'bookings'])
-    ->name('center.bookings');
+        ->name('center.bookings');
 
 });
 
-Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function() {
-    Route::get('/',           [AdminController::class, 'dashboard'])->name('dashboard');
-    Route::get('/users',      [AdminController::class, 'users'])->name('users');
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
+    Route::get('/users', [AdminController::class, 'users'])->name('users');
     Route::post('/users/{user}/toggle', [AdminController::class, 'toggleUser'])->name('users.toggle');
-    Route::delete('/users/{user}',      [AdminController::class, 'destroyUser'])->name('users.destroy');
-    Route::get('/centers',    [AdminController::class, 'centers'])->name('centers');
+    Route::delete('/users/{user}', [AdminController::class, 'destroyUser'])->name('users.destroy');
+    Route::get('/centers', [AdminController::class, 'centers'])->name('centers');
     Route::post('/centers/{center}/toggle', [AdminController::class, 'toggleCenter'])->name('centers.toggle');
-    Route::delete('/centers/{center}',      [AdminController::class, 'destroyCenter'])->name('centers.destroy');
+    Route::delete('/centers/{center}', [AdminController::class, 'destroyCenter'])->name('centers.destroy');
     Route::get('/activities', [AdminController::class, 'activities'])->name('activities');
-    Route::get('/bookings',   [AdminController::class, 'bookings'])->name('bookings');
-    Route::get('/reviews',    [AdminController::class, 'reviews'])->name('reviews');
+    Route::delete('/activity/{activity}/delete', [AdminController::class, 'destroy'])->name('activity.destroy');
+    Route::post('/activity/{activity}/toggle-active', [AdminController::class, 'toggleActive'])->name('activity.toggle-active');
+    Route::get('/bookings', [AdminController::class, 'bookings'])->name('bookings');
+    Route::get('/reviews', [AdminController::class, 'reviews'])->name('reviews');
     Route::delete('/reviews/{review}', [AdminController::class, 'destroyReview'])->name('reviews.destroy');
-    Route::get('/profile',    [AdminController::class, 'profile'])->name('profile');
+    Route::get('/profile', [AdminController::class, 'profile'])->name('profile');
 });
 // Protected routes
 Route::get('/dashboard', function () {

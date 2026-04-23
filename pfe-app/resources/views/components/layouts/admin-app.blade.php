@@ -1,16 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Activio Admin — {{ $title ?? 'Dashboard' }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="{{ asset('css/main.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/components.css') }}">
     <link rel="stylesheet" href="{{ asset('css/admin/admin.css') }}">
     @stack('styles')
 </head>
+
 <body>
 
     {{-- SIDEBAR --}}
@@ -106,8 +112,7 @@
             </button>
             <h1 class="topbar-title font-display">{{ $title ?? 'Dashboard' }}</h1>
             <div class="flex items-center gap-3">
-                <a href="{{ route('home') }}" target="_blank"
-                    class="topbar-site-link">
+                <a href="{{ route('home') }}" target="_blank" class="topbar-site-link">
                     <span class="material-icons" style="font-size:16px">open_in_new</span>
                     View Site
                 </a>
@@ -131,4 +136,5 @@
     </script>
     @stack('scripts')
 </body>
+
 </html>

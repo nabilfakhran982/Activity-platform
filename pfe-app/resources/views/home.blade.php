@@ -40,8 +40,8 @@
             {{-- Quick suggestions --}}
             <div class="flex flex-wrap justify-center gap-2 mt-5">
                 @foreach($categories->take(5) as $cat)
-                    <button onclick="window.location.href='/search?q={{ urlencode($cat->name) }}'"
-                        class="text-white/45 text-xs border border-white/15 rounded-full px-4 py-1.5 hover:border-white/40 hover:text-white/70 transition-colors">
+                    <button onclick="selectSuggestion(this, '{{ $cat->name }}')"
+                        class="suggestion-btn text-white/45 text-xs border border-white/15 rounded-full px-4 py-1.5 hover:border-white/40 hover:text-white/70 transition-colors">
                         {{ $cat->name }}
                     </button>
                 @endforeach
@@ -50,9 +50,14 @@
 
         {{-- Floating stats --}}
         <div class="max-w-3xl mx-auto w-full mt-16 grid grid-cols-3 gap-4 relative z-10">
+            @php
+                $avgRating = \App\Models\Review::avg('rating');
+                $formattedRating = $avgRating ? number_format($avgRating, 1) : 'N/A';
+            @endphp
             @foreach([
                 [$activitiesCount . '+', 'Activities'],
                 [$centersCount . '+', 'Centers'],
+                [$formattedRating, 'Avg Rating'],
             ] as $stat)
                 <div class="text-center border border-white/10 rounded-2xl py-4 px-2"
                     style="background:rgba(255,255,255,0.04)">
@@ -191,5 +196,26 @@
                 window.location.href = '/search?q=' + encodeURIComponent(this.value);
             }
         });
+    </script>
+
+    <script>
+        function selectSuggestion(btn, name) {
+            // إزالة الـ active من باقي الأزرار
+            document.querySelectorAll('.suggestion-btn').forEach(b => {
+                b.classList.remove('active-suggestion');
+                b.style.borderColor = '';
+                b.style.color = '';
+            });
+
+            // تفعيل الزر المضغوط
+            btn.style.borderColor = '#D4A350';
+            btn.style.color = '#D4A350';
+            btn.classList.add('active-suggestion');
+
+            // حط الكلمة بالـ search input
+            const input = document.getElementById('home-search');
+            input.value = name;
+            input.focus();
+        }
     </script>
 </x-layouts.app-main>

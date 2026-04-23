@@ -76,7 +76,7 @@
         }
 
         async function toggleActivity(id, btn) {
-            const res = await fetch(`/activity/${id}/toggle-active`, {
+            const res = await fetch(`/admin/activity/${id}/toggle-active`, {
                 method: 'POST',
                 headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Accept': 'application/json' },
             });
@@ -93,7 +93,7 @@
             document.getElementById('confirm-msg').textContent = `Delete "${name}"? This cannot be undone.`;
             document.getElementById('confirm-modal').style.display = 'flex';
             document.getElementById('confirm-btn').onclick = async () => {
-                const res = await fetch(`/activity/${id}/delete`, {
+                const res = await fetch(`/admin/activity/${id}/delete`, {
                     method: 'DELETE',
                     headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Accept': 'application/json' },
                 });
