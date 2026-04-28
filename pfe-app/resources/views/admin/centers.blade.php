@@ -5,51 +5,57 @@
             <h2 class="admin-card-title">All Centers <span style="color:#a09890;font-size:14px;font-weight:400">({{ $centers->total() }})</span></h2>
             <input type="text" class="admin-search" placeholder="Search centers..." oninput="filterTable(this.value, 'centers-table')">
         </div>
+        @if($centers->isEmpty())
+            <div class="admin-no-results">No centers yet</div>
+        @else
         <div style="overflow-x:auto">
-            <table class="admin-table" id="centers-table">
-                <thead>
-                    <tr>
-                        <th>Center</th>
-                        <th>Owner</th>
-                        <th>City</th>
-                        <th>Activities</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($centers as $center)
-                    <tr id="center-row-{{ $center->id }}">
-                        <td>
-                            <p class="font-medium text-sm">{{ $center->name }}</p>
-                            <p class="text-xs" style="color:#8a7a6a">{{ $center->address }}</p>
-                        </td>
-                        <td>
-                            <p class="text-sm">{{ $center->user->name }}</p>
-                            <p class="text-xs" style="color:#8a7a6a">{{ $center->user->email }}</p>
-                        </td>
-                        <td class="text-sm">{{ $center->city }}</td>
-                        <td class="text-sm">{{ $center->activities_count }}</td>
-                        <td>
-                            <span class="badge {{ $center->is_active ? 'badge-green' : 'badge-red' }}" id="center-status-{{ $center->id }}">
-                                {{ $center->is_active ? 'Active' : 'Inactive' }}
-                            </span>
-                        </td>
-                        <td>
-                            <div class="flex gap-2">
-                                <button onclick="toggleCenter({{ $center->id }}, this)"
-                                    class="admin-action-btn" id="center-toggle-{{ $center->id }}">
-                                    {{ $center->is_active ? 'Deactivate' : 'Activate' }}
-                                </button>
-                                <button onclick="confirmDelete('center', {{ $center->id }}, '{{ addslashes($center->name) }}')"
-                                    class="admin-action-btn danger">Delete</button>
-                            </div>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
+            <div class="admin-table-wrapper">
+                <table class="admin-table" id="centers-table">
+                    <thead>
+                        <tr>
+                            <th>Center</th>
+                            <th>Owner</th>
+                            <th>City</th>
+                            <th>Activities</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($centers as $center)
+                        <tr id="center-row-{{ $center->id }}">
+                            <td>
+                                <p class="font-medium text-sm">{{ $center->name }}</p>
+                                <p class="text-xs" style="color:#8a7a6a">{{ $center->address }}</p>
+                            </td>
+                            <td>
+                                <p class="text-sm">{{ $center->user->name }}</p>
+                                <p class="text-xs" style="color:#8a7a6a">{{ $center->user->email }}</p>
+                            </td>
+                            <td class="text-sm">{{ $center->city }}</td>
+                            <td class="text-sm">{{ $center->activities_count }}</td>
+                            <td>
+                                <span class="badge {{ $center->is_active ? 'badge-green' : 'badge-red' }}" id="center-status-{{ $center->id }}">
+                                    {{ $center->is_active ? 'Active' : 'Inactive' }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="flex gap-2">
+                                    <button onclick="toggleCenter({{ $center->id }}, this)"
+                                        class="admin-action-btn" id="center-toggle-{{ $center->id }}">
+                                        {{ $center->is_active ? 'Deactivate' : 'Activate' }}
+                                    </button>
+                                    <button onclick="confirmDelete('center', {{ $center->id }}, '{{ addslashes($center->name) }}')"
+                                        class="admin-action-btn danger">Delete</button>
+                                </div>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
         </div>
+        @endif
         @if($centers->hasPages())
         <div class="flex justify-center gap-2 p-4">{{ $centers->links() }}</div>
         @endif

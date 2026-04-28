@@ -5,6 +5,9 @@
             <h2 class="admin-card-title">All Reviews <span style="color:#a09890;font-size:14px;font-weight:400">({{ $reviews->total() }})</span></h2>
             <input type="text" class="admin-search" placeholder="Search reviews..." oninput="filterTable(this.value)">
         </div>
+        @if($reviews->isEmpty())
+            <div class="admin-no-results">No reviews yet</div>
+        @else
         <div style="overflow-x:auto">
             <table class="admin-table" id="reviews-table">
                 <thead>
@@ -50,6 +53,7 @@
                 </tbody>
             </table>
         </div>
+        @endif
         @if($reviews->hasPages())
         <div class="flex justify-center gap-2 p-4">{{ $reviews->links() }}</div>
         @endif

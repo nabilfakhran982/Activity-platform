@@ -6,61 +6,67 @@
             <input type="text" class="admin-search" placeholder="Search users..." id="search-input"
                 oninput="filterTable(this.value)">
         </div>
+        @if($users->isEmpty())
+            <div class="admin-no-results">No users yet</div>
+        @else
         <div style="overflow-x:auto">
-            <table class="admin-table" id="users-table">
-                <thead>
-                    <tr>
-                        <th>User</th>
-                        <th>Role</th>
-                        <th>Phone</th>
-                        <th>Joined</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($users as $user)
-                    <tr id="user-row-{{ $user->id }}">
-                        <td>
-                            <div class="flex items-center gap-2">
-                                <div class="admin-avatar">{{ strtoupper(substr($user->name, 0, 1)) }}</div>
-                                <div>
-                                    <p class="font-medium text-sm">{{ $user->name }}</p>
-                                    <p class="text-xs" style="color:#8a7a6a">{{ $user->email }}</p>
+            <div class="admin-table-wrapper">
+                <table class="admin-table" id="users-table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Role</th>
+                            <th>Phone</th>
+                            <th>Joined</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($users as $user)
+                        <tr id="user-row-{{ $user->id }}">
+                            <td>
+                                <div class="flex items-center gap-2">
+                                    <div class="admin-avatar">{{ strtoupper(substr($user->name, 0, 1)) }}</div>
+                                    <div>
+                                        <p class="font-medium text-sm">{{ $user->name }}</p>
+                                        <p class="text-xs" style="color:#8a7a6a">{{ $user->email }}</p>
+                                    </div>
                                 </div>
-                            </div>
-                        </td>
-                        <td>
-                            <span class="badge {{ $user->role === 'admin' ? 'badge-red' : ($user->role === 'center_owner' ? 'badge-gold' : 'badge-gray') }}">
-                                {{ ucfirst(str_replace('_', ' ', $user->role)) }}
-                            </span>
-                        </td>
-                        <td class="text-xs" style="color:#8a7a6a">{{ $user->phone ?? '—' }}</td>
-                        <td class="text-xs" style="color:#a09890">{{ $user->created_at->format('d M Y') }}</td>
-                        <td>
-                            <span class="badge {{ $user->is_active ? 'badge-green' : 'badge-red' }}" id="user-status-{{ $user->id }}">
-                                {{ $user->is_active ? 'Active' : 'Inactive' }}
-                            </span>
-                        </td>
-                        <td>
-                            <div class="flex gap-2">
-                                @if($user->role !== 'admin')
-                                <button onclick="toggleUser({{ $user->id }}, this)"
-                                    class="admin-action-btn" id="user-toggle-{{ $user->id }}">
-                                    {{ $user->is_active ? 'Deactivate' : 'Activate' }}
-                                </button>
-                                <button onclick="confirmDeleteUser({{ $user->id }}, '{{ addslashes($user->name) }}')"
-                                    class="admin-action-btn danger">Delete</button>
-                                @else
-                                <span class="text-xs" style="color:#c0b8b0">—</span>
-                                @endif
-                            </div>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
+                            </td>
+                            <td>
+                                <span class="badge {{ $user->role === 'admin' ? 'badge-red' : ($user->role === 'center_owner' ? 'badge-gold' : 'badge-gray') }}">
+                                    {{ ucfirst(str_replace('_', ' ', $user->role)) }}
+                                </span>
+                            </td>
+                            <td class="text-xs" style="color:#8a7a6a">{{ $user->phone ?? '—' }}</td>
+                            <td class="text-xs" style="color:#a09890">{{ $user->created_at->format('d M Y') }}</td>
+                            <td>
+                                <span class="badge {{ $user->is_active ? 'badge-green' : 'badge-red' }}" id="user-status-{{ $user->id }}">
+                                    {{ $user->is_active ? 'Active' : 'Inactive' }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="flex gap-2">
+                                    @if($user->role !== 'admin')
+                                    <button onclick="toggleUser({{ $user->id }}, this)"
+                                        class="admin-action-btn" id="user-toggle-{{ $user->id }}">
+                                        {{ $user->is_active ? 'Deactivate' : 'Activate' }}
+                                    </button>
+                                    <button onclick="confirmDeleteUser({{ $user->id }}, '{{ addslashes($user->name) }}')"
+                                        class="admin-action-btn danger">Delete</button>
+                                    @else
+                                    <span class="text-xs" style="color:#c0b8b0">—</span>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
         </div>
+        @endif
 
         {{-- Pagination --}}
         @if($users->hasPages())

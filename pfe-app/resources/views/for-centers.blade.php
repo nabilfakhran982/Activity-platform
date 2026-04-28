@@ -5,7 +5,23 @@
     @endpush
 
     {{-- Hero --}}
-    <section class="fc-hero">
+    <section class="fc-hero relative overflow-hidden">
+
+        {{-- VIDEO BACKGROUND --}}
+        <div style="position:absolute;inset:0;z-index:0">
+            <video
+                autoplay
+                muted
+                loop
+                playsinline
+                style="width:100%;height:100%;object-fit:cover;object-position:center"
+            >
+                <source src="{{ asset('videos/for_centers_hero.mp4') }}" type="video/mp4">
+            </video>
+            {{-- Overlay --}}
+            <div style="position:absolute;inset:0;background:linear-gradient(to bottom, rgba(26,26,24,0.65) 0%, rgba(26,26,24,0.55) 50%, rgba(26,26,24,0.75) 100%)"></div>
+        </div>
+
         <div class="max-w-4xl mx-auto px-6 text-center relative z-10">
             <p class="section-label">For Center Owners</p>
             <h1 class="font-display text-white text-5xl md:text-6xl font-bold mb-6">
@@ -95,8 +111,7 @@
             <div class="fc-step">
                 <div class="step-number">2</div>
                 <h3 class="font-display text-lg font-bold mb-2">Add your activities</h3>
-                <p class="text-sm text-[#5a5751] leading-relaxed">List your classes, set prices, schedules, and age
-                    groups.</p>
+                <p class="text-sm text-[#5a5751] leading-relaxed">List your classes, set prices, schedules, and age groups.</p>
             </div>
             <div class="fc-step">
                 <div class="step-number">3</div>

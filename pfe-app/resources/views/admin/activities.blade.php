@@ -5,52 +5,58 @@
             <h2 class="admin-card-title">All Activities <span style="color:#a09890;font-size:14px;font-weight:400">({{ $activities->total() }})</span></h2>
             <input type="text" class="admin-search" placeholder="Search activities..." oninput="filterTable(this.value)">
         </div>
+        @if($activities->isEmpty())
+            <div class="admin-no-results">No activities yet</div>
+        @else
         <div style="overflow-x:auto">
-            <table class="admin-table" id="activities-table">
-                <thead>
-                    <tr>
-                        <th>Activity</th>
-                        <th>Center</th>
-                        <th>Category</th>
-                        <th>Price</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($activities as $activity)
-                    <tr id="activity-row-{{ $activity->id }}">
-                        <td>
-                            <p class="font-medium text-sm">{{ $activity->title }}</p>
-                            <p class="text-xs" style="color:#8a7a6a">
-                                {{ $activity->level ? ucfirst($activity->level) : 'Any level' }}
-                                @if($activity->min_age || $activity->max_age)
-                                    · Ages {{ $activity->min_age ?? '0' }}{{ $activity->max_age ? '–'.$activity->max_age : '+' }}
-                                @endif
-                            </p>
-                        </td>
-                        <td class="text-sm">{{ $activity->center->name }}</td>
-                        <td>{{ $activity->category->icon }} {{ $activity->category->name }}</td>
-                        <td class="text-sm font-medium">${{ number_format($activity->price, 0) }}</td>
-                        <td>
-                            <span class="badge {{ $activity->is_active ? 'badge-green' : 'badge-red' }}" id="activity-status-{{ $activity->id }}">
-                                {{ $activity->is_active ? 'Active' : 'Inactive' }}
-                            </span>
-                        </td>
-                        <td>
-                            <div class="flex gap-2">
-                                <button onclick="toggleActivity({{ $activity->id }}, this)" class="admin-action-btn">
-                                    {{ $activity->is_active ? 'Deactivate' : 'Activate' }}
-                                </button>
-                                <button onclick="confirmDeleteActivity({{ $activity->id }}, '{{ addslashes($activity->title) }}')"
-                                    class="admin-action-btn danger">Delete</button>
-                            </div>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
+            <div class="admin-table-wrapper">
+                <table class="admin-table" id="activities-table">
+                    <thead>
+                        <tr>
+                            <th>Activity</th>
+                            <th>Center</th>
+                            <th>Category</th>
+                            <th>Price</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($activities as $activity)
+                        <tr id="activity-row-{{ $activity->id }}">
+                            <td>
+                                <p class="font-medium text-sm">{{ $activity->title }}</p>
+                                <p class="text-xs" style="color:#8a7a6a">
+                                    {{ $activity->level ? ucfirst($activity->level) : 'Any level' }}
+                                    @if($activity->min_age || $activity->max_age)
+                                        · Ages {{ $activity->min_age ?? '0' }}{{ $activity->max_age ? '–'.$activity->max_age : '+' }}
+                                    @endif
+                                </p>
+                            </td>
+                            <td class="text-sm">{{ $activity->center->name }}</td>
+                            <td>{{ $activity->category->icon }} {{ $activity->category->name }}</td>
+                            <td class="text-sm font-medium">${{ number_format($activity->price, 0) }}</td>
+                            <td>
+                                <span class="badge {{ $activity->is_active ? 'badge-green' : 'badge-red' }}" id="activity-status-{{ $activity->id }}">
+                                    {{ $activity->is_active ? 'Active' : 'Inactive' }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="flex gap-2">
+                                    <button onclick="toggleActivity({{ $activity->id }}, this)" class="admin-action-btn">
+                                        {{ $activity->is_active ? 'Deactivate' : 'Activate' }}
+                                    </button>
+                                    <button onclick="confirmDeleteActivity({{ $activity->id }}, '{{ addslashes($activity->title) }}')"
+                                        class="admin-action-btn danger">Delete</button>
+                                </div>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
         </div>
+        @endif
         @if($activities->hasPages())
         <div class="flex justify-center gap-2 p-4">{{ $activities->links() }}</div>
         @endif

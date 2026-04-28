@@ -75,7 +75,7 @@
             </div>
 
             {{-- RIGHT --}}
-            <div class="md:col-span-2 space-y-8">
+            <div class="md:col-span-2 space-y-5">
 
                 {{-- BOOKINGS HEADER --}}
                 <h2 class="font-display text-xl font-bold">My Bookings</h2>
@@ -195,7 +195,8 @@
                 @endif
 
                 {{-- SAVED ACTIVITIES --}}
-                <h2 class="font-display text-xl font-bold">Saved Activities</h2>
+                <div class="translate-y-5">
+                <h2 class="font-display text-xl font-bold translate-y-1">Saved Activities</h2>
 
                 @if($user->favourites->isEmpty())
                     <div class="no-results" style="margin-top:-16px">
@@ -261,6 +262,7 @@
                         </div>
                     </div>
                 @endif
+                </div>
 
             </div>
         </div>
