@@ -96,7 +96,7 @@
         <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4 category-list">
             @foreach($categories as $cat)
                 <div class="category-card p-5 text-center" data-slug="{{ $cat->slug }}">
-                    <div class="text-4xl mb-3">{{ $cat->icon }}</div>
+                    <img src="{{ asset('images/categories/' . $cat->icon) }}" alt="{{ $cat->name }}" class="w-12 h-12 mx-auto mb-3 object-contain">
                     <div class="font-medium text-sm">{{ $cat->name }}</div>
                 </div>
             @endforeach

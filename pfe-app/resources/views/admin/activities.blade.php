@@ -34,7 +34,7 @@
                                 </p>
                             </td>
                             <td class="text-sm">{{ $activity->center->name }}</td>
-                            <td>{{ $activity->category->icon }} {{ $activity->category->name }}</td>
+                            <td><img src="{{ asset('images/categories/' . $activity->category->icon) }}" alt="{{ $activity->category->name }}" class="w-12 h-12 mx-auto mb-3 object-contain"> {{ $activity->category->name }}</td>
                             <td class="text-sm font-medium">${{ number_format($activity->price, 0) }}</td>
                             <td>
                                 <span class="badge {{ $activity->is_active ? 'badge-green' : 'badge-red' }}" id="activity-status-{{ $activity->id }}">

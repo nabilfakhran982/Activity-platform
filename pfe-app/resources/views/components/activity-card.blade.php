@@ -16,7 +16,7 @@
         @if($image)
             <img src="{{ asset($image->image_path) }}" alt="{{ $act->title }}">
         @else
-            <span style="font-size:48px">{{ $act->category->icon }}</span>
+            <img src="{{ asset('images/categories/' . $act->category->icon) }}" alt="{{ $act->category->name }}" class="w-12 h-12 mx-auto mb-3 object-contain">
         @endif
 
         {{-- Favourite button --}}

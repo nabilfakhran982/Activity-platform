@@ -351,6 +351,19 @@
     border: 1px dashed #E8E5DF;
 }
 
+[id^="section-"] {
+    margin-bottom: 24px;
+}
+
+.no-results {
+    margin-top: 12px;
+}
+
+#bookings-container > h2,
+.mt-8 > h2 {
+    margin-bottom: 16px;
+}
+
 @media (max-width: 768px) {
     .max-w-5xl {
         max-width: 100% !important;

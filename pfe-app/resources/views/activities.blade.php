@@ -42,7 +42,9 @@
                                     <button type="button" onclick="setCategory('{{ $cat->slug }}')"
                                         class="category-pill {{ request('category') == $cat->slug ? 'active' : '' }}"
                                         id="cat-{{ $cat->slug }}">
-                                        {{ $cat->icon }} {{ $cat->name }}
+                                        <img src="{{ asset('images/categories/' . $cat->icon) }}" alt="{{ $cat->name }}"
+                                            style="width:16px;height:16px;object-fit:contain;display:inline-block;vertical-align:middle;margin-right:4px">
+                                        {{ $cat->name }}
                                     </button>
                                 @endforeach
                             </div>

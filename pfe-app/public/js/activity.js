@@ -1,3 +1,14 @@
+// ============ Category picker ============
+function pickCategory(formId, catId, btn) {
+    document.getElementById(formId + '-category_id').value = catId;
+    document.querySelectorAll('#' + formId + '-cat-picker .cat-pick-btn').forEach(b => {
+        b.style.borderColor = '#e5e7eb';
+        b.style.background = '#fff';
+    });
+    btn.style.borderColor = '#D4A350';
+    btn.style.background = '#FDF8EE';
+}
+
 // ============ Schedule rows ============
 const DAYS = [
     "monday",
@@ -125,6 +136,10 @@ document
             if (data.success) {
                 this.reset();
                 document.getElementById("add-activity-form-schedules").innerHTML = "";
+                document.querySelectorAll('#add-activity-form-cat-picker .cat-pick-btn').forEach(b => {
+                    b.style.borderColor = '#e5e7eb';
+                    b.style.background = '#fff';
+                });
                 closeModal("add-activity-modal");
                 addActivityToGrid(data.activity);
             }
@@ -138,10 +153,15 @@ document
 function openEditActivityModal(id, activity) {
     const container = document.getElementById("edit-activity-form-container");
 
-    const cats = CATEGORIES.map(
-        (c) =>
-            `<option value="${c.id}" ${activity.category_id == c.id ? "selected" : ""}>${c.icon} ${c.name}</option>`,
-    ).join("");
+    const catPickerBtns = CATEGORIES.map((c) =>
+        `<button type="button"
+            onclick="pickCategory('edit-activity-form', ${c.id}, this)"
+            class="cat-pick-btn"
+            style="display:flex;flex-direction:column;align-items:center;padding:8px;border-radius:8px;border:2px solid ${activity.category_id == c.id ? '#D4A350' : '#e5e7eb'};background:${activity.category_id == c.id ? '#FDF8EE' : '#fff'};cursor:pointer;transition:border-color 0.15s">
+            <img src="/images/categories/${c.icon}" alt="${c.name}" style="width:48px;height:48px;object-fit:contain;margin-bottom:12px">
+            <span style="font-size:11px;line-height:1.3">${c.name}</span>
+        </button>`
+    ).join('');
 
     const levels = ["beginner", "intermediate", "advanced"];
     const levelOptions = levels
@@ -164,12 +184,12 @@ function openEditActivityModal(id, activity) {
                     <label class="form-label">Description</label>
                     <textarea name="description" rows="2" class="form-input">${activity.description ?? ""}</textarea>
                 </div>
-                <div class="form-group">
+                <div class="form-group" style="grid-column:1/-1">
                     <label class="form-label">Category</label>
-                    <select name="category_id" class="form-input">
-                        <option value="">Select category</option>
-                        ${cats}
-                    </select>
+                    <input type="hidden" name="category_id" id="edit-activity-form-category_id" value="${activity.category_id ?? ''}">
+                    <div id="edit-activity-form-cat-picker" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:4px">
+                        ${catPickerBtns}
+                    </div>
                     <p class="error-msg" id="edit-activity-form-err-category_id"></p>
                 </div>
                 <div class="form-group">
@@ -275,7 +295,7 @@ function updateActivityInGrid(id, act) {
             const imgUrl = "/" + act.images[0].image_path + "?t=" + Date.now();
             imgWrapper.innerHTML = `<img src="${imgUrl}" alt="${act.title}" class="activity-img">${overlay}`;
         } else {
-            imgWrapper.innerHTML = `<div class="activity-img-placeholder" style="background:#2A2520;display:flex;align-items:center;justify-content:center;font-size:48px;height:100%">${act.category?.icon ?? "🏃"}</div>${overlay}`;
+            imgWrapper.innerHTML = `<div class="activity-img-placeholder" style="background:#2A2520;display:flex;align-items:center;justify-content:center;height:100%"><img src="/images/categories/${act.category?.icon ?? 'default.png'}" alt="${act.category?.name ?? ''}" style="width:48px;height:48px;object-fit:contain"></div>${overlay}`;
         }
     }
 
@@ -425,7 +445,7 @@ function addActivityToGrid(act) {
 
     const image = act.images && act.images.length > 0
         ? `<img src="/${act.images[0].image_path}" alt="${act.title}" class="activity-img">`
-        : `<div class="activity-img-placeholder" style="background:#2A2520;display:flex;align-items:center;justify-content:center;font-size:48px;height:100%">${act.category?.icon ?? "🏃"}</div>`;
+        : `<div class="activity-img-placeholder" style="background:#2A2520;display:flex;align-items:center;justify-content:center;height:100%"><img src="/images/categories/${act.category?.icon ?? 'default.png'}" alt="${act.category?.name ?? ''}" style="width:48px;height:48px;object-fit:contain"></div>`;
 
     const firstSchedule = act.schedules && act.schedules.length > 0 ? act.schedules[0] : null;
     const remainingCount = act.schedules ? act.schedules.length - 1 : 0;

@@ -19,17 +19,23 @@
                 placeholder="Describe your activity...">{{ $activity?->description }}</textarea>
         </div>
 
-        <div class="form-group">
+        <div class="form-group md:col-span-2">
             <label class="form-label">Category</label>
-            <select name="category_id" class="form-input">
-                <option value="">Select category</option>
+            <input type="hidden" name="category_id" id="{{ $formId }}-category_id"
+                value="{{ $activity?->category_id }}">
+            <div class="grid grid-cols-3 sm:grid-cols-4 gap-2 mt-1" id="{{ $formId }}-cat-picker">
                 @foreach($categories as $cat)
-                    <option value="{{ $cat->id }}"
-                        {{ $activity?->category_id == $cat->id ? 'selected' : '' }}>
-                        {{ $cat->icon }} {{ $cat->name }}
-                    </option>
+                    <button type="button"
+                        onclick="pickCategory('{{ $formId }}', {{ $cat->id }}, this)"
+                        class="cat-pick-btn flex flex-col items-center p-2 rounded-lg text-center transition"
+                        style="border:2px solid {{ $activity?->category_id == $cat->id ? '#D4A350' : '#e5e7eb' }};background:{{ $activity?->category_id == $cat->id ? '#FDF8EE' : '#fff' }};cursor:pointer">
+                        <img src="{{ asset('images/categories/' . $cat->icon) }}"
+                             alt="{{ $cat->name }}"
+                             class="w-12 h-12 mx-auto mb-3 object-contain">
+                        <span class="text-xs leading-tight">{{ $cat->name }}</span>
+                    </button>
                 @endforeach
-            </select>
+            </div>
             <p class="error-msg" id="{{ $formId }}-err-category_id"></p>
         </div>
 

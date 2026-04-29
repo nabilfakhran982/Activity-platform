@@ -95,8 +95,9 @@
                     ];
                 @endphp
 
+                <div id="bookings-container">
                 @if($allBookings->isEmpty())
-                    <div class="no-results" style="margin-top:-16px">
+                    <div id="no-bookings-message" class="no-results">
                         <div class="mb-3" style="width:48px;height:48px;margin:0 auto;background:#F0EDE6;border-radius:50%;display:flex;align-items:center;justify-content:center">
                             <svg width="22" height="22" fill="none" stroke="#a09890" stroke-width="1.5" viewBox="0 0 24 24">
                                 <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
@@ -106,9 +107,19 @@
                         <p class="text-sm"><a href="{{ route('activities') }}" class="text-[#D4A350]">Browse activities</a></p>
                     </div>
                 @else
+                    <div id="no-bookings-message" class="no-results" style="display:none">
+                        <div class="mb-3" style="width:48px;height:48px;margin:0 auto;background:#F0EDE6;border-radius:50%;display:flex;align-items:center;justify-content:center">
+                            <svg width="22" height="22" fill="none" stroke="#a09890" stroke-width="1.5" viewBox="0 0 24 24">
+                                <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
+                            </svg>
+                        </div>
+                        <p class="font-medium mb-1">No bookings yet</p>
+                        <p class="text-sm"><a href="{{ route('activities') }}" class="text-[#D4A350]">Browse activities</a></p>
+                    </div>
+                @endif
                     @foreach($sections as $section)
                         @if($section['bookings']->isNotEmpty())
-                        <div>
+                        <div id="section-{{ $section['id'] }}">
                             {{-- Section header --}}
                             <div class="flex items-center justify-between mb-3">
                                 <h3 class="font-display text-base font-bold" style="color:#1a1a18">
@@ -139,8 +150,8 @@
                                                     @if($img)
                                                         <img src="{{ asset($img->image_path) }}" alt="{{ $act->title }}">
                                                     @else
-                                                        <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:24px;background:#F0EDE6">
-                                                            {{ $act->category->icon ?? '🏃' }}
+                                                        <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#F0EDE6">
+                                                            <img src="{{ asset('images/categories/' . ($act->category->icon ?? 'default.png')) }}" alt="{{ $act->category->name ?? '' }}" class="w-12 h-12 mx-auto mb-3 object-contain">
                                                         </div>
                                                     @endif
                                                 </div>
@@ -192,14 +203,15 @@
                         </div>
                         @endif
                     @endforeach
-                @endif
+                </div>
 
                 {{-- SAVED ACTIVITIES --}}
-                <div class="translate-y-5">
-                <h2 class="font-display text-xl font-bold translate-y-1">Saved Activities</h2>
+                <div class="mt-8">
+                <h2 class="font-display text-xl font-bold">Saved Activities</h2>
 
+                <div id="favourites-container">
                 @if($user->favourites->isEmpty())
-                    <div class="no-results" style="margin-top:-16px">
+                    <div id="no-favs-message" class="no-results">
                         <div class="mb-3" style="width:48px;height:48px;margin:0 auto;background:#F0EDE6;border-radius:50%;display:flex;align-items:center;justify-content:center">
                             <svg width="22" height="22" fill="none" stroke="#a09890" stroke-width="1.5" viewBox="0 0 24 24">
                                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
@@ -209,8 +221,20 @@
                         <p class="text-sm"><a href="{{ route('activities') }}" class="text-[#D4A350]">Explore activities</a></p>
                     </div>
                 @else
-                    <div class="flex items-center justify-between mb-3" style="margin-top:-16px">
-                    <span class="text-sm mt-3" id="favs-saved-count" style="color:#a09890">{{ $user->favourites->count() }} saved</span>                        @if($user->favourites->count() > 2)
+                    <div id="no-favs-message" class="no-results" style="display:none">
+                        <div class="mb-3" style="width:48px;height:48px;margin:0 auto;background:#F0EDE6;border-radius:50%;display:flex;align-items:center;justify-content:center">
+                            <svg width="22" height="22" fill="none" stroke="#a09890" stroke-width="1.5" viewBox="0 0 24 24">
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                            </svg>
+                        </div>
+                        <p class="font-medium mb-1">No saved activities</p>
+                        <p class="text-sm"><a href="{{ route('activities') }}" class="text-[#D4A350]">Explore activities</a></p>
+                    </div>
+                @endif
+                @if(!$user->favourites->isEmpty())
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-sm" id="favs-saved-count" style="color:#a09890">{{ $user->favourites->count() }} saved</span>
+                        @if($user->favourites->count() > 2)
                         <div class="flex gap-2">
                             <button onclick="scrollCarousel('favs-track', -1)" class="carousel-arrow">
                                 <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
@@ -232,8 +256,8 @@
                                             @if($img)
                                                 <img src="{{ asset($img->image_path) }}" alt="{{ $act->title }}">
                                             @else
-                                                <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:32px;background:#F0EDE6">
-                                                    {{ $act->category->icon ?? '🏃' }}
+                                                <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#F0EDE6">
+                                                    <img src="{{ asset('images/categories/' . ($act->category->icon ?? 'default.png')) }}" alt="{{ $act->category->name ?? '' }}" class="w-12 h-12 mx-auto mb-3 object-contain">
                                                 </div>
                                             @endif
                                             <div class="fav-overlay">
@@ -262,6 +286,7 @@
                         </div>
                     </div>
                 @endif
+                </div>
                 </div>
 
             </div>
@@ -340,33 +365,64 @@
         }
 
         async function deleteBooking(bookingId) {
-            const slide = document.getElementById(`slide-${bookingId}`);
-            const res = await fetch(`/booking/${bookingId}/delete`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                    'Accept': 'application/json',
-                },
-            });
-            if (res.ok && slide) {
-                // ناقص الـ count بالـ section header
-                const track = slide.closest('.carousel-track');
-                if (track) {
-                    const section = track.closest('div[class=""]') || track.parentElement.parentElement;
-                    const countEl = section?.querySelector('span[style*="a09890"]');
+    const slide = document.getElementById(`slide-${bookingId}`);
+    if (!slide) return;
+
+    const res = await fetch(`/booking/${bookingId}/delete`, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json',
+        },
+    });
+
+    if (res.ok) {
+        // خذ الـ section قبل ما نشيل الـ slide
+        const sectionDiv = slide.closest('[id^="section-"]');
+        const track = slide.closest('.carousel-track');
+
+        slide.style.opacity = '0';
+        slide.style.transition = 'opacity 0.3s';
+
+        setTimeout(() => {
+            slide.remove();
+
+            if (sectionDiv && track) {
+                const remainingSlides = track.querySelectorAll('.booking-slide').length;
+
+                if (remainingSlides === 0) {
+                    // شيل الـ section header والـ carousel كلهم
+                    sectionDiv.style.opacity = '0';
+                    sectionDiv.style.transition = 'opacity 0.3s';
+                    setTimeout(() => {
+                        sectionDiv.remove();
+
+                        // بعد ما نشيل الـ section، تحقق إذا ما في sections تانية
+                        const bookingsContainer = document.getElementById('bookings-container');
+                        const remainingSections = bookingsContainer.querySelectorAll('[id^="section-"]').length;
+
+                        if (remainingSections === 0) {
+                            const noMsg = document.getElementById('no-bookings-message');
+                            if (noMsg) {
+                                noMsg.style.display = 'block';
+                                setTimeout(() => { noMsg.style.opacity = '1'; }, 50);
+                            }
+                        }
+                    }, 300);
+                } else {
+                    // update count
+                    const countEl = sectionDiv.querySelector('h3 span');
                     if (countEl) {
                         const current = parseInt(countEl.textContent.replace(/\D/g, '')) || 0;
                         countEl.textContent = `(${Math.max(0, current - 1)})`;
                     }
                 }
-
-                slide.style.opacity = '0';
-                slide.style.transition = 'opacity 0.3s';
-                setTimeout(() => slide.remove(), 300);
             }
-        }
+        }, 300);
+    }
+}
 
-       // ============ Remove favourite ============
+        // ============ Remove favourite ============
         function confirmRemoveFavourite(activityId, title) {
             showConfirmModal(
                 'Remove from Saved?',
@@ -375,35 +431,57 @@
             );
         }
 
-          async function removeFavourite(activityId) {
-                const res = await fetch(`/activity/${activityId}/favourite`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                        'Accept': 'application/json',
-                    },
-                });
-                if (res.ok) {
-                    const card = document.getElementById(`fav-card-${activityId}`);
-                    if (card) {
-                        const slide = card.closest('.fav-slide');
-                        if (slide) {
-                            // ناقص الـ count — بدور على الـ span قبل الـ carousel-wrapper
-                            const countEl = document.getElementById('favs-saved-count');
-                            if (countEl) {
-                                const current = parseInt(countEl.textContent) || 0;
-                                countEl.textContent = `${Math.max(0, current - 1)} saved`;
-                            }
+        async function removeFavourite(activityId) {
+        const res = await fetch(`/activity/${activityId}/favourite`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json',
+            },
+        });
+        if (res.ok) {
+            const card = document.getElementById(`fav-card-${activityId}`);
+            if (!card) return;
+            const slide = card.closest('.fav-slide');
+            if (!slide) return;
 
-                            slide.style.opacity = '0';
-                            slide.style.transition = 'opacity 0.3s';
-                            setTimeout(() => slide.remove(), 300);
-                        }
+            slide.style.opacity = '0';
+            slide.style.transition = 'opacity 0.3s';
+
+            setTimeout(() => {
+                slide.remove();
+
+                const favsTrack = document.getElementById('favs-track');
+                const remainingFavs = favsTrack ? favsTrack.querySelectorAll('.fav-slide').length : 0;
+
+                // Update count
+                const countEl = document.getElementById('favs-saved-count');
+                if (countEl) {
+                    const current = parseInt(countEl.textContent) || 0;
+                    countEl.textContent = `${Math.max(0, current - 1)} saved`;
+                }
+
+                if (remainingFavs === 0) {
+                    // شيل كل الـ favourites container content
+                    const favouritesContainer = document.getElementById('favourites-container');
+                    if (favouritesContainer) {
+                        favouritesContainer.innerHTML = `
+                            <div class="no-results" style="margin-top:12px">
+                                <div class="mb-3" style="width:48px;height:48px;margin:0 auto;background:#F0EDE6;border-radius:50%;display:flex;align-items:center;justify-content:center">
+                                    <svg width="22" height="22" fill="none" stroke="#a09890" stroke-width="1.5" viewBox="0 0 24 24">
+                                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                                    </svg>
+                                </div>
+                                <p class="font-medium mb-1">No saved activities</p>
+                                <p class="text-sm"><a href="/activities" class="text-[#D4A350]">Explore activities</a></p>
+                            </div>`;
                     }
                 }
-            }
+            }, 300);
+        }
+    }
 
-        // ============ Update profile ============
+         // ============ Update profile ============
         document.getElementById('profile-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             clearErrors('profile-form');

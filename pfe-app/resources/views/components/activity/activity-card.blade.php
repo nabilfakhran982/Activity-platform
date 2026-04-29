@@ -16,7 +16,7 @@
             <img src="{{ asset($image->image_path) }}" alt="{{ $act->title }}" class="activity-img">
         @else
             <div class="activity-img-placeholder {{ $bg }}">
-                {{ $act->category->icon }}
+                <img src="{{ asset('images/categories/' . $act->category->icon) }}" alt="{{ $act->category->name }}" class="w-12 h-12 mx-auto mb-3 object-contain">
             </div>
         @endif
 

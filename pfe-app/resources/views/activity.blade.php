@@ -20,7 +20,7 @@
             <img src="{{ asset($image->image_path) }}" alt="{{ $activity->title }}" class="activity-hero-img">
         @else
             <div class="activity-hero-placeholder {{ $activity->getBgClass() }}">
-                {{ $activity->category->icon }}
+                <img src="{{ asset('images/categories/' . $activity->category->icon) }}" alt="{{ $activity->category->name }}" class="w-12 h-12 mx-auto mb-3 object-contain">
             </div>
         @endif
 
