@@ -37,7 +37,34 @@ class BookingController extends Controller
     public function updateStatus(Request $request, Booking $booking)
     {
         $request->validate(['status' => 'required|in:pending,confirmed,cancelled']);
+
+        $oldStatus = $booking->status;
         $booking->update(['status' => $request->status]);
+
+        // ===== Send notification to user =====
+        if ($request->status !== $oldStatus) {
+            $activityTitle = $booking->schedule?->activity?->title ?? 'your activity';
+            $centerName = $booking->schedule?->activity?->center?->name ?? 'the center';
+
+            if ($request->status === 'confirmed') {
+                \App\Models\Notification::create([
+                    'user_id' => $booking->user_id,
+                    'title' => 'Booking Confirmed! 🎉',
+                    'message' => "Your booking for \"{$activityTitle}\" at {$centerName} has been confirmed. See you there!",
+                    'type' => 'success',
+                    'icon' => 'check_circle',
+                ]);
+            } elseif ($request->status === 'cancelled') {
+                \App\Models\Notification::create([
+                    'user_id' => $booking->user_id,
+                    'title' => 'Booking Cancelled',
+                    'message' => "Unfortunately, your booking for \"{$activityTitle}\" at {$centerName} has been cancelled.",
+                    'type' => 'warning',
+                    'icon' => 'cancel',
+                ]);
+            }
+        }
+
         return response()->json(['success' => true]);
     }
 

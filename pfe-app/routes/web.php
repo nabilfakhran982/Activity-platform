@@ -3,6 +3,7 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\FavouriteController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\SearchController;
@@ -48,6 +49,12 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware(['auth'])->group(function () {
     Route::post('/center-register', [CenterController::class, 'store'])->name('center.register');
+});
+
+Route::middleware('auth')->group(function () {
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::post('/notifications/read-all', [NotificationController::class, 'readAll']);
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'read']);
 });
 
 Route::middleware(['auth', 'center_owner'])->group(function () {

@@ -23,7 +23,52 @@ class AdminController extends Controller
         $recentUsers = User::latest()->take(5)->get();
         $recentBookings = Booking::with(['user', 'schedule.activity.center'])->latest()->take(5)->get();
 
-        return view('admin.dashboard', compact('stats', 'recentUsers', 'recentBookings'));
+        // ===== CHART DATA =====
+
+        // 1. Bookings per month (last 6 months)
+        $bookingsRaw = Booking::where('created_at', '>=', now()->subMonths(6))
+            ->get()
+            ->groupBy(fn($b) => $b->created_at->format('M Y'))
+            ->map(fn($group) => $group->count());
+
+        $months = collect();
+        for ($i = 5; $i >= 0; $i--) {
+            $label = now()->subMonths($i)->format('M Y');
+            $months[$label] = $bookingsRaw[$label] ?? 0;
+        }
+
+        // 2. Most popular categories (top 5)
+        $popularCategories = Booking::selectRaw('categories.name as category, COUNT(*) as total')
+            ->join('schedules', 'bookings.schedule_id', '=', 'schedules.id')
+            ->join('activities', 'schedules.activity_id', '=', 'activities.id')
+            ->join('categories', 'activities.category_id', '=', 'categories.id')
+            ->groupBy('categories.name')
+            ->orderByDesc('total')
+            ->limit(5)
+            ->get();
+
+        // 3. Revenue per month (confirmed bookings, last 6 months)
+        $revenueRaw = Booking::where('status', 'confirmed')
+            ->where('created_at', '>=', now()->subMonths(6))
+            ->with('schedule.activity')
+            ->get()
+            ->groupBy(fn($b) => $b->created_at->format('M Y'))
+            ->map(fn($group) => $group->sum(fn($b) => $b->schedule?->activity?->price ?? 0));
+
+        $revenue = collect();
+        for ($i = 5; $i >= 0; $i--) {
+            $label = now()->subMonths($i)->format('M Y');
+            $revenue[$label] = round($revenueRaw[$label] ?? 0, 2);
+        }
+
+        return view('admin.dashboard', compact(
+            'stats',
+            'recentUsers',
+            'recentBookings',
+            'months',
+            'popularCategories',
+            'revenue'
+        ));
     }
 
     // ===== USERS =====

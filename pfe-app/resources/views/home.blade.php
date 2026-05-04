@@ -94,14 +94,48 @@
         </div>
 
         <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4 category-list">
-            @foreach($categories as $cat)
-                <div class="category-card p-5 text-center" data-slug="{{ $cat->slug }}">
+            @foreach($initialCategories as $cat)
+                <div class="category-card p-5 text-center cursor-pointer hover:opacity-80 transition-opacity" data-slug="{{ $cat->slug }}">
                     <img src="{{ asset('images/categories/' . $cat->icon) }}" alt="{{ $cat->name }}" class="w-12 h-12 mx-auto mb-3 object-contain">
                     <div class="font-medium text-sm">{{ $cat->name }}</div>
                 </div>
             @endforeach
         </div>
+
+        @if($hasMoreCategories)
+            <div class="text-center mt-8">
+                <button onclick="openCategoriesModal()" class="text-[#8a7a6a] hover:text-[#1a1a18] font-medium text-sm transition-colors">
+                    Show more categories →
+                </button>
+            </div>
+        @endif
     </section>
+
+    {{-- ============ CATEGORIES MODAL ============ --}}
+    @if($hasMoreCategories)
+        <div id="categoriesModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                <div class="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
+                    <h2 class="font-display text-2xl font-bold">All Categories</h2>
+                    <button onclick="closeCategoriesModal()" class="text-gray-500 hover:text-gray-700">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 category-modal-list">
+                        @foreach($categories as $cat)
+                            <div class="category-card p-5 text-center cursor-pointer hover:opacity-80 transition-opacity" data-slug="{{ $cat->slug }}">
+                                <img src="{{ asset('images/categories/' . $cat->icon) }}" alt="{{ $cat->name }}" class="w-12 h-12 mx-auto mb-3 object-contain">
+                                <div class="font-medium text-sm">{{ $cat->name }}</div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 
     {{-- ============ FEATURED ACTIVITIES ============ --}}
     <section class="max-w-6xl mx-auto px-6 pb-20">
@@ -186,6 +220,27 @@
             }
         });
 
+        const categoryModalList = document.querySelector(".category-modal-list");
+        if (categoryModalList) {
+            categoryModalList.addEventListener("click", (e) => {
+                const categoryCard = e.target.closest(".category-card");
+                if (categoryCard) {
+                    const slug = categoryCard.getAttribute("data-slug");
+                    window.location.href = `/activities?category=${slug}`;
+                }
+            });
+        }
+
+        function openCategoriesModal() {
+            document.getElementById('categoriesModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeCategoriesModal() {
+            document.getElementById('categoriesModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
         document.getElementById('home-search').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 window.location.href = '/search?q=' + encodeURIComponent(this.value);
@@ -205,5 +260,12 @@
             input.value = name;
             input.focus();
         }
+
+        // Close modal when clicking outside
+        document.getElementById('categoriesModal')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeCategoriesModal();
+            }
+        });
     </script>
 </x-layouts.app-main>

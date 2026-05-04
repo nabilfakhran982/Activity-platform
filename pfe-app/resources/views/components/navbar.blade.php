@@ -28,6 +28,31 @@
                     </a>
                 @endif
 
+                @auth
+                    {{-- 🔔 NOTIFICATION BELL --}}
+                    <div class="notif-wrapper" id="notif-wrapper">
+                        <button class="notif-btn" id="notif-btn" onclick="toggleNotifDropdown()">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                stroke="currentColor" style="width:22px;height:22px;color:rgba(255,255,255,0.6)">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+                            </svg>
+                            <span class="notif-badge" id="notif-badge" style="display:none">0</span>
+                        </button>
+
+                        <div class="notif-dropdown" id="notif-dropdown">
+                            <div class="notif-dropdown-header">
+                                <span
+                                    style="font-family:'Playfair Display',serif;font-weight:700;font-size:14px;color:#1a1a18">Notifications</span>
+                                <button onclick="markAllRead()" class="notif-read-all">Mark all read</button>
+                            </div>
+                            <div id="notif-list">
+                                <div class="notif-empty">No notifications yet</div>
+                            </div>
+                        </div>
+                    </div>
+                @endauth
+
                 <a href="{{ route('profile') }}" class="flex items-center gap-2 nav-link">
                     <div class="w-8 h-8 bg-[#D4A350] rounded-full flex items-center justify-center text-[#1a1a18]">
                         <!-- Profile Icon -->

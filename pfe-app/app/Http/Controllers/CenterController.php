@@ -71,19 +71,81 @@ class CenterController extends Controller
             ->orderByDesc('updated_at')
             ->get();
 
+        $centerIds = $centers->pluck('id');
+
         $totalActivities = $centers->sum('activities_count');
 
-        $totalBookings = Booking::whereHas('schedule.activity', function ($q) use ($centers) {
-            $q->whereIn('center_id', $centers->pluck('id'));
+        $totalBookings = Booking::whereHas('schedule.activity', function ($q) use ($centerIds) {
+            $q->whereIn('center_id', $centerIds);
         })->count();
 
-        $pendingBookings = Booking::whereHas('schedule.activity', function ($q) use ($centers) {
-            $q->whereIn('center_id', $centers->pluck('id'));
+        $pendingBookings = Booking::whereHas('schedule.activity', function ($q) use ($centerIds) {
+            $q->whereIn('center_id', $centerIds);
         })->where('status', 'pending')->count();
 
-        return view('center.dashboard', compact('centers', 'totalActivities', 'totalBookings', 'pendingBookings'));
-    }
+        // ===== CHART DATA =====
 
+        // 1. Bookings per month (last 6 months)
+        $bookingsPerMonth = Booking::whereHas('schedule.activity', function ($q) use ($centerIds) {
+            $q->whereIn('center_id', $centerIds);
+        })
+            ->where('created_at', '>=', now()->subMonths(6))
+            ->get()
+            ->groupBy(fn($b) => $b->created_at->format('M Y'))
+            ->map(fn($group) => $group->count());
+
+        // Fill missing months with 0
+        $months = collect();
+        for ($i = 5; $i >= 0; $i--) {
+            $label = now()->subMonths($i)->format('M Y');
+            $months[$label] = $bookingsPerMonth[$label] ?? 0;
+        }
+
+        // 2. Most popular activities (top 5 by bookings)
+        $popularActivities = Booking::selectRaw('schedules.activity_id, COUNT(*) as total')
+            ->join('schedules', 'bookings.schedule_id', '=', 'schedules.id')
+            ->join('activities', 'schedules.activity_id', '=', 'activities.id')
+            ->whereIn('activities.center_id', $centerIds)
+            ->groupBy('schedules.activity_id')
+            ->orderByDesc('total')
+            ->limit(5)
+            ->with('schedule.activity')
+            ->get()
+            ->map(function ($booking) {
+                $activity = \App\Models\Activity::find($booking->activity_id);
+                return [
+                    'title' => $activity?->title ?? 'Unknown',
+                    'total' => $booking->total,
+                ];
+            });
+
+        // 3. Revenue per month (last 6 months)
+        $revenuePerMonth = Booking::whereHas('schedule.activity', function ($q) use ($centerIds) {
+            $q->whereIn('center_id', $centerIds);
+        })
+            ->where('status', 'confirmed')
+            ->where('created_at', '>=', now()->subMonths(6))
+            ->with('schedule.activity')
+            ->get()
+            ->groupBy(fn($b) => $b->created_at->format('M Y'))
+            ->map(fn($group) => $group->sum(fn($b) => $b->schedule?->activity?->price ?? 0));
+
+        $revenue = collect();
+        for ($i = 5; $i >= 0; $i--) {
+            $label = now()->subMonths($i)->format('M Y');
+            $revenue[$label] = round($revenuePerMonth[$label] ?? 0, 2);
+        }
+
+        return view('center.dashboard', compact(
+            'centers',
+            'totalActivities',
+            'totalBookings',
+            'pendingBookings',
+            'months',
+            'popularActivities',
+            'revenue'
+        ));
+    }
     public function update(Request $request, Center $center)
     {
         $request->validate([
