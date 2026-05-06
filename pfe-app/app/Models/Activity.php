@@ -68,4 +68,12 @@ class Activity extends Model
     {
         return $this->reviews->avg('rating');
     }
+
+    public function bookings()
+    {
+        return $this->hasManyThrough(
+            \App\Models\Booking::class,
+            \App\Models\Schedule::class
+        );
+    }
 }

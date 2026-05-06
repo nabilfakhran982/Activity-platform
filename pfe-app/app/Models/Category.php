@@ -8,8 +8,8 @@ class Category extends Model
 {
     protected $fillable = ['name', 'slug', 'icon'];
 
-    // public function activities()
-    // {
-    //     return $this->hasMany(Activity::class);
-    // }
+    public function activities()
+    {
+        return $this->hasMany(Activity::class);
+    }
 }
