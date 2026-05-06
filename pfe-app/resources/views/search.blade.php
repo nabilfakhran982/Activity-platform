@@ -335,18 +335,15 @@
                     const data = await res.json();
                     document.getElementById('loading').classList.add('hidden');
 
-                    console.log('Response data:', data);
-                    console.log('category_not_found:', data.category_not_found);
-                    console.log('count:', data.count);
-                    console.log('suggestions_html length:', data.suggestions_html?.length);
-
+                    console.log('fallback_message:', data.fallback_message);
+                    console.log('is_day_fallback:', data.is_day_fallback);
                     // AI Summary
                     if (data.ai_summary) {
                         document.getElementById('ai-summary-text').textContent = data.ai_summary;
                         document.getElementById('ai-summary').classList.remove('hidden');
                     }
 
-                    // 1. Category مش موجودة — أول شي
+                    // 1. Category مش موجودة
                     if (data.category_not_found) {
                         document.getElementById('no-results').classList.remove('hidden');
                         document.getElementById('no-results-title').textContent = 'This activity is not available on Activio yet';
@@ -369,14 +366,28 @@
                         return;
                     }
 
-                    // 3. Fallback banner
+                    // 3. Day proximity — بيبين results مع banner
+                    if (data.is_day_fallback) {
+                        document.getElementById('fallback-text').textContent = data.fallback_message ||
+                            `No activities on your requested day near you — showing closest sessions on ${data.suggested_day}`;
+                        document.getElementById('fallback-banner').classList.remove('hidden');
+                    }
+
+                    // 4. Time proximity — بيبين results مع banner
+                    if (data.is_time_fallback) {
+                        document.getElementById('fallback-text').textContent = data.fallback_message ||
+                            `No activities at your requested time — showing closest sessions around ${data.suggested_time}`;
+                        document.getElementById('fallback-banner').classList.remove('hidden');
+                    }
+
+                    // 5. City fallback banner
                     if (data.is_fallback && data.fallback_city) {
                         document.getElementById('fallback-text').textContent =
                             `We couldn't find activities in "${data.fallback_city}" — showing similar activities from other locations in Lebanon.`;
                         document.getElementById('fallback-banner').classList.remove('hidden');
                     }
 
-                    // 4. ما في نتائج عامة
+                    // 6. ما في نتائج عامة
                     if (!data.count || data.count === 0) {
                         document.getElementById('no-results').classList.remove('hidden');
                         document.getElementById('no-results-title').textContent = 'No activities found for your search';
@@ -385,9 +396,9 @@
                             document.getElementById('suggestions-grid').innerHTML = data.suggestions_html;
                         }
                         return;
-
                     }
 
+                    // 7. عرض النتائج
                     document.getElementById('results-grid').innerHTML = data.html;
 
                 } catch (err) {

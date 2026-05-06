@@ -68,6 +68,16 @@ class SearchController extends Controller
         'water' => 'water-sports',
     ];
 
+    private array $dayOrder = [
+        'monday' => 0,
+        'tuesday' => 1,
+        'wednesday' => 2,
+        'thursday' => 3,
+        'friday' => 4,
+        'saturday' => 5,
+        'sunday' => 6,
+    ];
+
     private function renderActivities($activities): string
     {
         $html = '';
@@ -85,6 +95,12 @@ class SearchController extends Controller
             ->orderByDesc('bookings_count')
             ->take($take)
             ->get();
+    }
+
+    private function timeToMinutes(string $time): int
+    {
+        $parts = explode(':', $time);
+        return ((int) $parts[0]) * 60 + ((int) ($parts[1] ?? 0));
     }
 
     public function index()
@@ -142,14 +158,13 @@ class SearchController extends Controller
             $aiResponse['max_age'] = null;
         }
 
-        // ===== CHECK: category slug موجود بالـ DB؟ =====
+        // ===== CHECK: category موجودة بالـ DB؟ =====
         if (!empty($aiResponse['category_slug'])) {
             $slugs = array_map('trim', explode(',', $aiResponse['category_slug']));
             $existingSlugs = \App\Models\Category::whereIn('slug', $slugs)->pluck('slug')->toArray();
             $missingSlugs = array_diff($slugs, $existingSlugs);
 
             if (empty($existingSlugs)) {
-                // كل الـ slugs مش موجودة بالـ DB
                 return response()->json([
                     'html' => '',
                     'count' => 0,
@@ -158,26 +173,100 @@ class SearchController extends Controller
                     'suggestions_html' => $this->renderActivities($this->popularActivities(3)),
                 ]);
             }
-
-            // شيل الـ slugs الغلط وخلي بس الموجودة
             if (!empty($missingSlugs)) {
                 $aiResponse['category_slug'] = implode(',', $existingSlugs);
             }
         }
 
-        // ===== BUILD QUERY =====
+        // ===== BUILD QUERY (with all filters including day/time) =====
         $activities = $this->buildQuery($aiResponse)->get();
 
-        // ===== FALLBACK — ما في نتائج بالمدينة =====
+        // ===== CITY FALLBACK =====
         $isFallback = false;
         $fallbackCity = null;
-
         if ($activities->isEmpty() && !empty($aiResponse['city'])) {
             $fallbackCity = $aiResponse['city'];
             $fallbackResponse = $aiResponse;
             $fallbackResponse['city'] = null;
             $activities = $this->buildQuery($fallbackResponse)->get();
             $isFallback = $activities->isNotEmpty();
+        }
+
+        // ===== TIME PROXIMITY FALLBACK (بدون near me) =====
+        $isTimeFallback = false;
+        $suggestedTime = null;
+        if ($activities->isEmpty() && !empty($aiResponse['start_time'])) {
+            $requestedMins = $this->timeToMinutes($aiResponse['start_time']);
+            $relaxed = $aiResponse;
+            $relaxed['start_time'] = null;
+            $all = $this->buildQuery($relaxed)->get();
+
+            if ($all->isNotEmpty()) {
+                $all = $all->map(function ($act) use ($requestedMins) {
+                    $closestDiff = PHP_INT_MAX;
+                    $closestTime = null;
+                    foreach ($act->schedules as $s) {
+                        $diff = abs($this->timeToMinutes($s->start_time) - $requestedMins);
+                        if ($diff < $closestDiff) {
+                            $closestDiff = $diff;
+                            $closestTime = $s->start_time;
+                        }
+                    }
+                    $act->time_diff = $closestDiff;
+                    $act->closest_time = $closestTime;
+                    return $act;
+                })->sortBy('time_diff');
+
+                $timeProximity = $all->filter(fn($act) => $act->time_diff <= 180);
+                if ($timeProximity->isNotEmpty()) {
+                    $activities = $timeProximity;
+                    $isTimeFallback = true;
+                    $closestMins = $this->timeToMinutes($activities->first()->closest_time);
+                    $h = intdiv($closestMins, 60);
+                    $m = $closestMins % 60;
+                    $suggestedTime = sprintf('%d:%02d %s', $h > 12 ? $h - 12 : ($h == 0 ? 12 : $h), $m, $h >= 12 ? 'PM' : 'AM');
+                }
+            }
+        }
+
+        // ===== DAY PROXIMITY FALLBACK (بدون near me) =====
+        $isDayFallback = false;
+        $suggestedDay = null;
+        $requestedDay = $aiResponse['day_of_week'] ?? ($aiResponse['days_of_week'][0] ?? null);
+
+        if ($activities->isEmpty() && $requestedDay) {
+            $relaxed = $aiResponse;
+            $relaxed['day_of_week'] = null;
+            $relaxed['days_of_week'] = null;
+            $relaxed['start_time'] = null;
+            $all = $this->buildQuery($relaxed)->get();
+
+            if ($all->isNotEmpty()) {
+                $reqDayNum = $this->dayOrder[strtolower($requestedDay)] ?? 0;
+
+                $all = $all->map(function ($act) use ($reqDayNum) {
+                    $closestDiff = PHP_INT_MAX;
+                    $closestDay = null;
+                    foreach ($act->schedules as $s) {
+                        $dayNum = $this->dayOrder[strtolower($s->day_of_week)] ?? 0;
+                        $diff = min(abs($dayNum - $reqDayNum), 7 - abs($dayNum - $reqDayNum));
+                        if ($diff < $closestDiff) {
+                            $closestDiff = $diff;
+                            $closestDay = $s->day_of_week;
+                        }
+                    }
+                    $act->day_diff = $closestDiff;
+                    $act->closest_day = $closestDay;
+                    return $act;
+                })->sortBy('day_diff');
+
+                $dayProximity = $all->filter(fn($act) => $act->day_diff <= 2);
+                if ($dayProximity->isNotEmpty()) {
+                    $activities = $dayProximity;
+                    $isDayFallback = true;
+                    $suggestedDay = ucfirst($activities->first()->closest_day ?? '');
+                }
+            }
         }
 
         // ===== NEAR ME =====
@@ -191,8 +280,7 @@ class SearchController extends Controller
                 }
                 $dLat = deg2rad($lat - $userLat);
                 $dLng = deg2rad($lng - $userLng);
-                $a = sin($dLat / 2) ** 2 +
-                    cos(deg2rad($userLat)) * cos(deg2rad($lat)) * sin($dLng / 2) ** 2;
+                $a = sin($dLat / 2) ** 2 + cos(deg2rad($userLat)) * cos(deg2rad($lat)) * sin($dLng / 2) ** 2;
                 $act->distance = 6371 * 2 * atan2(sqrt($a), sqrt(1 - $a));
                 return $act;
             })->sortBy('distance');
@@ -200,9 +288,51 @@ class SearchController extends Controller
             $nearbyActivities = $activities->filter(fn($act) => $act->distance <= 20);
 
             if ($nearbyActivities->isEmpty()) {
-                $nearestCity = $activities->first()?->center?->city ?? null;
 
-                // إذا ما في activities أصلاً — category_not_found
+                // ===== حاول day proximity أولاً =====
+                if ($requestedDay) {
+                    $reqDayNum = $this->dayOrder[strtolower($requestedDay)] ?? 0;
+                    $relaxedForDay = $aiResponse;
+                    $relaxedForDay['day_of_week'] = null;
+                    $relaxedForDay['days_of_week'] = null;
+                    $allForDay = $this->buildQuery($relaxedForDay)->get();
+                    $withDay = $allForDay->map(function ($act) use ($reqDayNum) {
+                        $closestDiff = PHP_INT_MAX;
+                        $closestDay = null;
+                        foreach ($act->schedules as $s) {
+                            $dayNum = $this->dayOrder[strtolower($s->day_of_week)] ?? 0;
+                            $diff = min(abs($dayNum - $reqDayNum), 7 - abs($dayNum - $reqDayNum));
+                            if ($diff < $closestDiff) {
+                                $closestDiff = $diff;
+                                $closestDay = $s->day_of_week;
+                            }
+                        }
+                        $act->day_diff = $closestDiff;
+                        $act->closest_day = $closestDay;
+                        return $act;
+                    })->sortBy('day_diff')->filter(fn($act) => $act->day_diff <= 2);
+
+                    if ($withDay->isNotEmpty()) {
+                        $categoryName = !empty($aiResponse['category_slug'])
+                            ? \App\Models\Category::whereIn('slug', explode(',', $aiResponse['category_slug']))
+                                ->pluck('name')->implode(' & ')
+                            : 'activities';
+                        $suggestedDay = ucfirst($withDay->first()->closest_day ?? '');
+
+                        return response()->json([
+                            'html' => $this->renderActivities($withDay),
+                            'count' => $withDay->count(),
+                            'ai_summary' => $aiResponse['summary'] ?? null,
+                            'is_day_fallback' => true,
+                            'suggested_day' => $suggestedDay,
+                            'fallback_message' => "No {$categoryName} near you on " . ucfirst($requestedDay) . " — showing closest sessions on {$suggestedDay}",
+                            'suggestions_html' => '',
+                        ]);
+                    }
+                }
+
+                // ===== ما في day fallback — بين أقرب مدينة =====
+                $nearestCity = $activities->first()?->center?->city ?? null;
                 if ($activities->isEmpty()) {
                     return response()->json([
                         'html' => '',
@@ -212,7 +342,6 @@ class SearchController extends Controller
                         'suggestions_html' => $this->renderActivities($this->popularActivities(3)),
                     ]);
                 }
-
                 $suggestedActivities = $nearestCity
                     ? $activities->filter(fn($act) => $act->center->city === $nearestCity)
                     : $activities->take(6);
@@ -226,9 +355,9 @@ class SearchController extends Controller
                     'suggestions_html' => $this->renderActivities($suggestedActivities),
                     'suggestions_count' => $suggestedActivities->count(),
                 ]);
+            } else {
+                $activities = $nearbyActivities;
             }
-
-            $activities = $nearbyActivities;
         } else {
             $activities = $activities->sortByDesc(fn($act) => $act->reviews->avg('rating') ?? 0);
         }
@@ -250,6 +379,10 @@ class SearchController extends Controller
             'parsed' => $aiResponse,
             'is_fallback' => $isFallback,
             'fallback_city' => $fallbackCity,
+            'is_time_fallback' => $isTimeFallback,
+            'suggested_time' => $suggestedTime,
+            'is_day_fallback' => $isDayFallback,
+            'suggested_day' => $suggestedDay,
             'suggestions_html' => '',
         ]);
     }
