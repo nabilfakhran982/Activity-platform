@@ -164,6 +164,27 @@
             <span id="fallback-text"></span>
         </div>
 
+        {{-- Recommendations Section (shown when no search) --}}
+        @auth
+            @if($recommendations->isNotEmpty())
+            <div id="recommendations-section">
+                <div class="flex items-end justify-between mb-10">
+                    <div>
+                        <p class="text-xs uppercase tracking-widest mb-2" style="color:#D4A350">
+                            ✦ {{ $recommendationLabel }}
+                        </p>
+                        <h2 class="font-display text-3xl md:text-4xl font-bold">{{ $recommendationTitle }}</h2>
+                    </div>
+                </div>
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    @foreach($recommendations as $act)
+                        <x-activity-card :act="$act" />
+                    @endforeach
+                </div>
+            </div>
+            @endif
+        @endauth
+
         {{-- Results grid --}}
         <div id="results-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
 
@@ -320,6 +341,8 @@
                 document.getElementById('no-results').classList.add('hidden');
                 document.getElementById('ai-summary').classList.add('hidden');
                 document.getElementById('fallback-banner').classList.add('hidden');
+                const recSection = document.getElementById('recommendations-section');
+                if (recSection) recSection.classList.add('hidden');
 
                 try {
                     const res = await fetch('/search', {
@@ -366,28 +389,35 @@
                         return;
                     }
 
-                    // 3. Day proximity — بيبين results مع banner
+                    // 3. Day exists but not at requested time
+                    if (data.is_time_on_day_fallback) {
+                        document.getElementById('fallback-text').textContent = data.fallback_message ||
+                            `No sessions at your requested time — showing closest available times on ${data.suggested_day || 'that day'}`;
+                        document.getElementById('fallback-banner').classList.remove('hidden');
+                    }
+
+                    // 4. Day proximity — showing results from closest available day
                     if (data.is_day_fallback) {
                         document.getElementById('fallback-text').textContent = data.fallback_message ||
-                            `No activities on your requested day near you — showing closest sessions on ${data.suggested_day}`;
+                            `No activities on your requested day — showing closest sessions on ${data.suggested_day}`;
                         document.getElementById('fallback-banner').classList.remove('hidden');
                     }
 
-                    // 4. Time proximity — بيبين results مع banner
+                    // 5. Time proximity — showing nearest available sessions
                     if (data.is_time_fallback) {
                         document.getElementById('fallback-text').textContent = data.fallback_message ||
-                            `No activities at your requested time — showing closest sessions around ${data.suggested_time}`;
+                            `No activities at your requested time — showing nearest available sessions at ${data.suggested_time}`;
                         document.getElementById('fallback-banner').classList.remove('hidden');
                     }
 
-                    // 5. City fallback banner
+                    // 6. City fallback banner
                     if (data.is_fallback && data.fallback_city) {
                         document.getElementById('fallback-text').textContent =
                             `We couldn't find activities in "${data.fallback_city}" — showing similar activities from other locations in Lebanon.`;
                         document.getElementById('fallback-banner').classList.remove('hidden');
                     }
 
-                    // 6. ما في نتائج عامة
+                    // 7. ما في نتائج عامة
                     if (!data.count || data.count === 0) {
                         document.getElementById('no-results').classList.remove('hidden');
                         document.getElementById('no-results-title').textContent = 'No activities found for your search';
@@ -398,7 +428,7 @@
                         return;
                     }
 
-                    // 7. عرض النتائج
+                    // 8. عرض النتائج
                     document.getElementById('results-grid').innerHTML = data.html;
 
                 } catch (err) {

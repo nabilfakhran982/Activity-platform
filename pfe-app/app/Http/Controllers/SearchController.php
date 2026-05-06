@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Activity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Auth;
 
 class SearchController extends Controller
 {
@@ -103,6 +104,15 @@ class SearchController extends Controller
         return ((int) $parts[0]) * 60 + ((int) ($parts[1] ?? 0));
     }
 
+    private function formatTime(string $time): string
+    {
+        $mins = $this->timeToMinutes($time);
+        $h = intdiv($mins, 60);
+        $m = $mins % 60;
+        $display = $h > 12 ? $h - 12 : ($h === 0 ? 12 : $h);
+        return sprintf('%d:%02d %s', $display, $m, $h >= 12 ? 'PM' : 'AM');
+    }
+
     public function index()
     {
         $suggestions = \App\Models\Category::withCount('activities')
@@ -111,7 +121,69 @@ class SearchController extends Controller
             ->take(8)
             ->get();
 
-        return view('search', compact('suggestions'));
+        // ===== PERSONALIZED RECOMMENDATIONS =====
+        $recommendations     = collect();
+        $recommendationTitle = null;
+        $recommendationLabel = null;
+
+        if (Auth::check()) {
+            $user = Auth::user();
+
+            // جمع الـ preferred category IDs من bookings وfavourites
+            $bookedCategoryIds = $user->bookings()
+                ->with('schedule.activity')
+                ->get()
+                ->pluck('schedule.activity.category_id')
+                ->filter()
+                ->countBy()
+                ->sortDesc()
+                ->keys()
+                ->take(3)
+                ->toArray();
+
+            $favCategoryIds = $user->favourites()
+                ->with('activity')
+                ->get()
+                ->pluck('activity.category_id')
+                ->filter()
+                ->countBy()
+                ->sortDesc()
+                ->keys()
+                ->take(3)
+                ->toArray();
+
+            // Merge — bookings أعطيها priority
+            $preferredCategoryIds = collect($bookedCategoryIds)
+                ->merge($favCategoryIds)
+                ->unique()
+                ->take(3)
+                ->toArray();
+
+            if (!empty($preferredCategoryIds)) {
+                $bookedActivityIds = $user->bookings()
+                    ->with('schedule.activity')
+                    ->get()
+                    ->pluck('schedule.activity.id')
+                    ->filter()
+                    ->toArray();
+
+                $recommendations = \App\Models\Activity::with(['center', 'category', 'reviews', 'images', 'favourites'])
+                    ->where('is_active', true)
+                    ->whereIn('category_id', $preferredCategoryIds)
+                    ->whereNotIn('id', $bookedActivityIds)
+                    ->withCount('bookings')
+                    ->orderByDesc('bookings_count')
+                    ->take(6)
+                    ->get();
+
+                if ($recommendations->isNotEmpty()) {
+                    $recommendationLabel = 'RECOMMENDED FOR YOU';
+                    $recommendationTitle = 'Based on your interest in ' . $recommendations->first()->category->name;
+                }
+            }
+        }
+
+        return view('search', compact('suggestions', 'recommendations', 'recommendationLabel', 'recommendationTitle'));
     }
 
     public function search(Request $request)
@@ -123,7 +195,7 @@ class SearchController extends Controller
 
         $aiResponse = $this->parseQueryWithAI($query);
 
-        // ===== OVERRIDES =====
+        // ===== KEYWORD OVERRIDES =====
         $foundSlugs = [];
         foreach ($this->keywordMap as $word => $slug) {
             if (str_contains($queryLower, $word)) {
@@ -158,7 +230,7 @@ class SearchController extends Controller
             $aiResponse['max_age'] = null;
         }
 
-        // ===== CHECK: category موجودة بالـ DB؟ =====
+        // ===== VALIDATE CATEGORY =====
         if (!empty($aiResponse['category_slug'])) {
             $slugs = array_map('trim', explode(',', $aiResponse['category_slug']));
             $existingSlugs = \App\Models\Category::whereIn('slug', $slugs)->pluck('slug')->toArray();
@@ -178,7 +250,7 @@ class SearchController extends Controller
             }
         }
 
-        // ===== BUILD QUERY (with all filters including day/time) =====
+        // ===== INITIAL QUERY (day+time combined in single whereHas) =====
         $activities = $this->buildQuery($aiResponse)->get();
 
         // ===== CITY FALLBACK =====
@@ -192,79 +264,178 @@ class SearchController extends Controller
             $isFallback = $activities->isNotEmpty();
         }
 
-        // ===== TIME PROXIMITY FALLBACK (بدون near me) =====
-        $isTimeFallback = false;
-        $suggestedTime = null;
-        if ($activities->isEmpty() && !empty($aiResponse['start_time'])) {
-            $requestedMins = $this->timeToMinutes($aiResponse['start_time']);
-            $relaxed = $aiResponse;
-            $relaxed['start_time'] = null;
-            $all = $this->buildQuery($relaxed)->get();
-
-            if ($all->isNotEmpty()) {
-                $all = $all->map(function ($act) use ($requestedMins) {
-                    $closestDiff = PHP_INT_MAX;
-                    $closestTime = null;
-                    foreach ($act->schedules as $s) {
-                        $diff = abs($this->timeToMinutes($s->start_time) - $requestedMins);
-                        if ($diff < $closestDiff) {
-                            $closestDiff = $diff;
-                            $closestTime = $s->start_time;
-                        }
-                    }
-                    $act->time_diff = $closestDiff;
-                    $act->closest_time = $closestTime;
-                    return $act;
-                })->sortBy('time_diff');
-
-                $timeProximity = $all->filter(fn($act) => $act->time_diff <= 180);
-                if ($timeProximity->isNotEmpty()) {
-                    $activities = $timeProximity;
-                    $isTimeFallback = true;
-                    $closestMins = $this->timeToMinutes($activities->first()->closest_time);
-                    $h = intdiv($closestMins, 60);
-                    $m = $closestMins % 60;
-                    $suggestedTime = sprintf('%d:%02d %s', $h > 12 ? $h - 12 : ($h == 0 ? 12 : $h), $m, $h >= 12 ? 'PM' : 'AM');
-                }
-            }
-        }
-
-        // ===== DAY PROXIMITY FALLBACK (بدون near me) =====
+        // ===== FALLBACK STATE =====
         $isDayFallback = false;
         $suggestedDay = null;
-        $requestedDay = $aiResponse['day_of_week'] ?? ($aiResponse['days_of_week'][0] ?? null);
+        $isTimeFallback = false;
+        $isTimeOnDayFallback = false;
+        $suggestedTime = null;
+        $availableTimesOnDay = null;
 
-        if ($activities->isEmpty() && $requestedDay) {
-            $relaxed = $aiResponse;
-            $relaxed['day_of_week'] = null;
-            $relaxed['days_of_week'] = null;
-            $relaxed['start_time'] = null;
-            $all = $this->buildQuery($relaxed)->get();
+        $requestedDay  = $aiResponse['day_of_week'] ?? ($aiResponse['days_of_week'][0] ?? null);
+        $requestedTime = !empty($aiResponse['start_time']) ? $aiResponse['start_time'] : null;
 
-            if ($all->isNotEmpty()) {
-                $reqDayNum = $this->dayOrder[strtolower($requestedDay)] ?? 0;
+        if ($activities->isEmpty()) {
 
-                $all = $all->map(function ($act) use ($reqDayNum) {
-                    $closestDiff = PHP_INT_MAX;
-                    $closestDay = null;
-                    foreach ($act->schedules as $s) {
-                        $dayNum = $this->dayOrder[strtolower($s->day_of_week)] ?? 0;
-                        $diff = min(abs($dayNum - $reqDayNum), 7 - abs($dayNum - $reqDayNum));
-                        if ($diff < $closestDiff) {
-                            $closestDiff = $diff;
-                            $closestDay = $s->day_of_week;
+            // ─── CASE A: both day AND time specified ───────────────────────────
+            if ($requestedDay && $requestedTime) {
+
+                // A1: try same day, any time — day exists but not at requested time
+                $dayOnly = $aiResponse;
+                $dayOnly['start_time'] = null;
+                $dayOnlyActs = $this->buildQuery($dayOnly)->get();
+
+                if ($dayOnlyActs->isNotEmpty()) {
+                    $requestedMins = $this->timeToMinutes($requestedTime);
+
+                    // For each activity, find closest schedule time that is ON the requested day
+                    $dayOnlyActs = $dayOnlyActs->map(function ($act) use ($requestedMins, $requestedDay) {
+                        $closestDiff = PHP_INT_MAX;
+                        $closestTime = null;
+                        foreach ($act->schedules as $s) {
+                            if (strtolower($s->day_of_week) !== strtolower($requestedDay)) continue;
+                            $diff = abs($this->timeToMinutes($s->start_time) - $requestedMins);
+                            if ($diff < $closestDiff) {
+                                $closestDiff = $diff;
+                                $closestTime = $s->start_time;
+                            }
+                        }
+                        $act->time_diff   = $closestDiff;
+                        $act->closest_time = $closestTime;
+                        return $act;
+                    })->sortBy('time_diff');
+
+                    $activities          = $dayOnlyActs;
+                    $isTimeOnDayFallback = true;
+                    $suggestedTime       = $this->formatTime($activities->first()->closest_time ?? $requestedTime);
+
+                    // Collect every distinct session time available on the requested day
+                    $availableTimesOnDay = $activities
+                        ->flatMap(fn($act) => $act->schedules)
+                        ->filter(fn($s) => strtolower($s->day_of_week) === strtolower($requestedDay))
+                        ->pluck('start_time')->unique()->sort()->values()
+                        ->map(fn($t) => $this->formatTime($t))
+                        ->implode(', ');
+
+                } else {
+                    // A2: day itself has no matching activities — find closest day (prioritise time too)
+                    $none = $aiResponse;
+                    $none['day_of_week']   = null;
+                    $none['days_of_week']  = null;
+                    $none['start_time']    = null;
+                    $all = $this->buildQuery($none)->get();
+
+                    if ($all->isNotEmpty()) {
+                        $reqDayNum     = $this->dayOrder[strtolower($requestedDay)] ?? 0;
+                        $requestedMins = $this->timeToMinutes($requestedTime);
+
+                        $all = $all->map(function ($act) use ($reqDayNum, $requestedMins) {
+                            $bestDayDiff  = PHP_INT_MAX;
+                            $bestTimeDiff = PHP_INT_MAX;
+                            $bestDay      = null;
+                            $bestTime     = null;
+                            foreach ($act->schedules as $s) {
+                                $dayNum  = $this->dayOrder[strtolower($s->day_of_week)] ?? 0;
+                                $dayDiff = min(abs($dayNum - $reqDayNum), 7 - abs($dayNum - $reqDayNum));
+                                $timeDiff = abs($this->timeToMinutes($s->start_time) - $requestedMins);
+                                if (
+                                    $dayDiff < $bestDayDiff ||
+                                    ($dayDiff === $bestDayDiff && $timeDiff < $bestTimeDiff)
+                                ) {
+                                    $bestDayDiff  = $dayDiff;
+                                    $bestTimeDiff = $timeDiff;
+                                    $bestDay      = $s->day_of_week;
+                                    $bestTime     = $s->start_time;
+                                }
+                            }
+                            $act->day_diff    = $bestDayDiff;
+                            $act->closest_day = $bestDay;
+                            $act->time_diff   = $bestTimeDiff;
+                            $act->closest_time = $bestTime;
+                            return $act;
+                        })->sortBy('day_diff');
+
+                        $minDayDiff   = $all->first()?->day_diff ?? PHP_INT_MAX;
+                        $dayProximity = $all->filter(fn($act) => $act->day_diff === $minDayDiff && $minDayDiff <= 3);
+                        if ($dayProximity->isNotEmpty()) {
+                            $activities    = $dayProximity;
+                            $isDayFallback = true;
+                            $suggestedDay  = ucfirst($activities->first()->closest_day ?? '');
                         }
                     }
-                    $act->day_diff = $closestDiff;
-                    $act->closest_day = $closestDay;
-                    return $act;
-                })->sortBy('day_diff');
+                }
 
-                $dayProximity = $all->filter(fn($act) => $act->day_diff <= 2);
-                if ($dayProximity->isNotEmpty()) {
-                    $activities = $dayProximity;
-                    $isDayFallback = true;
-                    $suggestedDay = ucfirst($activities->first()->closest_day ?? '');
+            // ─── CASE B: only time specified ───────────────────────────────────
+            } elseif ($requestedTime && !$requestedDay) {
+                $requestedMins = $this->timeToMinutes($requestedTime);
+                $noTime = $aiResponse;
+                $noTime['start_time'] = null;
+                $all = $this->buildQuery($noTime)->get();
+
+                if ($all->isNotEmpty()) {
+                    $all = $all->map(function ($act) use ($requestedMins) {
+                        $closestDiff = PHP_INT_MAX;
+                        $closestTime = null;
+                        foreach ($act->schedules as $s) {
+                            $diff = abs($this->timeToMinutes($s->start_time) - $requestedMins);
+                            if ($diff < $closestDiff) {
+                                $closestDiff = $diff;
+                                $closestTime = $s->start_time;
+                            }
+                        }
+                        $act->time_diff    = $closestDiff;
+                        $act->closest_time = $closestTime;
+                        return $act;
+                    })->sortBy('time_diff');
+
+                    // Only show results within 90 minutes of the requested time
+                    $timeProximity = $all->filter(fn($act) => $act->time_diff <= 90);
+
+                    // Widen to 180 min if nothing found within 90
+                    if ($timeProximity->isEmpty()) {
+                        $timeProximity = $all->filter(fn($act) => $act->time_diff <= 180);
+                    }
+
+                    if ($timeProximity->isNotEmpty()) {
+                        $activities     = $timeProximity;
+                        $isTimeFallback = true;
+                        // Suggested time = the closest schedule time found globally
+                        $suggestedTime  = $this->formatTime($activities->first()->closest_time);
+                    }
+                }
+
+            // ─── CASE C: only day specified ────────────────────────────────────
+            } elseif ($requestedDay && !$requestedTime) {
+                $reqDayNum = $this->dayOrder[strtolower($requestedDay)] ?? 0;
+                $noDay = $aiResponse;
+                $noDay['day_of_week']  = null;
+                $noDay['days_of_week'] = null;
+                $all = $this->buildQuery($noDay)->get();
+
+                if ($all->isNotEmpty()) {
+                    $all = $all->map(function ($act) use ($reqDayNum) {
+                        $closestDiff = PHP_INT_MAX;
+                        $closestDay  = null;
+                        foreach ($act->schedules as $s) {
+                            $dayNum = $this->dayOrder[strtolower($s->day_of_week)] ?? 0;
+                            $diff   = min(abs($dayNum - $reqDayNum), 7 - abs($dayNum - $reqDayNum));
+                            if ($diff < $closestDiff) {
+                                $closestDiff = $diff;
+                                $closestDay  = $s->day_of_week;
+                            }
+                        }
+                        $act->day_diff    = $closestDiff;
+                        $act->closest_day = $closestDay;
+                        return $act;
+                    })->sortBy('day_diff');
+
+                    $minDayDiff   = $all->first()?->day_diff ?? PHP_INT_MAX;
+                    $dayProximity = $all->filter(fn($act) => $act->day_diff === $minDayDiff && $minDayDiff <= 3);
+                    if ($dayProximity->isNotEmpty()) {
+                        $activities    = $dayProximity;
+                        $isDayFallback = true;
+                        $suggestedDay  = ucfirst($activities->first()->closest_day ?? '');
+                    }
                 }
             }
         }
@@ -289,57 +460,114 @@ class SearchController extends Controller
 
             if ($nearbyActivities->isEmpty()) {
 
-                // ===== حاول day proximity أولاً =====
+                // Try day+time-aware fallback without near-me constraint
                 if ($requestedDay) {
-                    $reqDayNum = $this->dayOrder[strtolower($requestedDay)] ?? 0;
-                    $relaxedForDay = $aiResponse;
-                    $relaxedForDay['day_of_week'] = null;
-                    $relaxedForDay['days_of_week'] = null;
-                    $allForDay = $this->buildQuery($relaxedForDay)->get();
-                    $withDay = $allForDay->map(function ($act) use ($reqDayNum) {
-                        $closestDiff = PHP_INT_MAX;
-                        $closestDay = null;
-                        foreach ($act->schedules as $s) {
-                            $dayNum = $this->dayOrder[strtolower($s->day_of_week)] ?? 0;
-                            $diff = min(abs($dayNum - $reqDayNum), 7 - abs($dayNum - $reqDayNum));
-                            if ($diff < $closestDiff) {
-                                $closestDiff = $diff;
-                                $closestDay = $s->day_of_week;
-                            }
-                        }
-                        $act->day_diff = $closestDiff;
-                        $act->closest_day = $closestDay;
-                        return $act;
-                    })->sortBy('day_diff')->filter(fn($act) => $act->day_diff <= 2);
+                    $reqDayNum    = $this->dayOrder[strtolower($requestedDay)] ?? 0;
+                    $categoryName = !empty($aiResponse['category_slug'])
+                        ? \App\Models\Category::whereIn('slug', explode(',', $aiResponse['category_slug']))->pluck('name')->implode(' & ')
+                        : 'activities';
 
-                    if ($withDay->isNotEmpty()) {
-                        $categoryName = !empty($aiResponse['category_slug'])
-                            ? \App\Models\Category::whereIn('slug', explode(',', $aiResponse['category_slug']))
-                                ->pluck('name')->implode(' & ')
-                            : 'activities';
-                        $suggestedDay = ucfirst($withDay->first()->closest_day ?? '');
+                    // Step 1: same day anywhere in Lebanon, any time
+                    $sameDayQuery = $aiResponse;
+                    $sameDayQuery['start_time'] = null;
+                    $allOnDay = $this->buildQuery($sameDayQuery)->get();
+
+                    if ($allOnDay->isNotEmpty()) {
+                        if ($requestedTime) {
+                            $requestedMins          = $this->timeToMinutes($requestedTime);
+                            $requestedTimeFormatted = $this->formatTime($requestedTime);
+
+                            // Sort activities by how close their Tuesday session is to requested time
+                            $allOnDay = $allOnDay->map(function ($act) use ($requestedMins, $requestedDay) {
+                                $closestDiff = PHP_INT_MAX;
+                                $closestTime = null;
+                                foreach ($act->schedules as $s) {
+                                    if (strtolower($s->day_of_week) !== strtolower($requestedDay)) continue;
+                                    $diff = abs($this->timeToMinutes($s->start_time) - $requestedMins);
+                                    if ($diff < $closestDiff) {
+                                        $closestDiff = $diff;
+                                        $closestTime = $s->start_time;
+                                    }
+                                }
+                                $act->time_diff    = $closestDiff;
+                                $act->closest_time = $closestTime;
+                                return $act;
+                            })->sortBy('time_diff');
+
+                            // Collect all unique times available on that day (sorted ascending)
+                            $availTimes = $allOnDay
+                                ->flatMap(fn($act) => $act->schedules)
+                                ->filter(fn($s) => strtolower($s->day_of_week) === strtolower($requestedDay))
+                                ->pluck('start_time')->unique()->sort()->values()
+                                ->map(fn($t) => $this->formatTime($t))
+                                ->implode(', ');
+
+                            $nearFallbackMsg = "No {$categoryName} near you on " . ucfirst($requestedDay) . " at {$requestedTimeFormatted} — available sessions on " . ucfirst($requestedDay) . ": {$availTimes}";
+                        } else {
+                            $nearFallbackMsg = "No {$categoryName} near you on " . ucfirst($requestedDay) . " — showing sessions on " . ucfirst($requestedDay) . " from other locations";
+                        }
 
                         return response()->json([
-                            'html' => $this->renderActivities($withDay),
-                            'count' => $withDay->count(),
-                            'ai_summary' => $aiResponse['summary'] ?? null,
-                            'is_day_fallback' => true,
-                            'suggested_day' => $suggestedDay,
-                            'fallback_message' => "No {$categoryName} near you on " . ucfirst($requestedDay) . " — showing closest sessions on {$suggestedDay}",
+                            'html'                    => $this->renderActivities($allOnDay),
+                            'count'                   => $allOnDay->count(),
+                            'ai_summary'              => $aiResponse['summary'] ?? null,
+                            'is_day_fallback'         => true,
+                            'is_time_on_day_fallback' => (bool) $requestedTime,
+                            'fallback_message'        => $nearFallbackMsg,
+                            'suggestions_html'        => '',
+                        ]);
+                    }
+
+                    // Step 2: day doesn't exist anywhere — find closest available day
+                    $relaxedForDay = $aiResponse;
+                    $relaxedForDay['day_of_week']  = null;
+                    $relaxedForDay['days_of_week'] = null;
+                    $relaxedForDay['start_time']   = null;
+                    $allForDay = $this->buildQuery($relaxedForDay)->get();
+
+                    $withDay = $allForDay->map(function ($act) use ($reqDayNum) {
+                        $closestDiff = PHP_INT_MAX;
+                        $closestDay  = null;
+                        foreach ($act->schedules as $s) {
+                            $dayNum = $this->dayOrder[strtolower($s->day_of_week)] ?? 0;
+                            $diff   = min(abs($dayNum - $reqDayNum), 7 - abs($dayNum - $reqDayNum));
+                            if ($diff < $closestDiff) {
+                                $closestDiff = $diff;
+                                $closestDay  = $s->day_of_week;
+                            }
+                        }
+                        $act->day_diff    = $closestDiff;
+                        $act->closest_day = $closestDay;
+                        return $act;
+                    })->sortBy('day_diff');
+
+                    $nearMinDiff = $withDay->first()?->day_diff ?? PHP_INT_MAX;
+                    $withDay = $withDay->filter(fn($act) => $act->day_diff === $nearMinDiff && $nearMinDiff <= 3);
+
+                    if ($withDay->isNotEmpty()) {
+                        $nearSuggestedDay = ucfirst($withDay->first()->closest_day ?? '');
+
+                        return response()->json([
+                            'html'             => $this->renderActivities($withDay),
+                            'count'            => $withDay->count(),
+                            'ai_summary'       => $aiResponse['summary'] ?? null,
+                            'is_day_fallback'  => true,
+                            'suggested_day'    => $nearSuggestedDay,
+                            'fallback_message' => "No {$categoryName} near you on " . ucfirst($requestedDay) . " — showing closest sessions on {$nearSuggestedDay}",
                             'suggestions_html' => '',
                         ]);
                     }
                 }
 
-                // ===== ما في day fallback — بين أقرب مدينة =====
+                // No day fallback either — show nearest city suggestions
                 $nearestCity = $activities->first()?->center?->city ?? null;
                 if ($activities->isEmpty()) {
                     return response()->json([
-                        'html' => '',
-                        'count' => 0,
-                        'ai_summary' => $aiResponse['summary'] ?? null,
+                        'html'              => '',
+                        'count'             => 0,
+                        'ai_summary'        => $aiResponse['summary'] ?? null,
                         'category_not_found' => true,
-                        'suggestions_html' => $this->renderActivities($this->popularActivities(3)),
+                        'suggestions_html'  => $this->renderActivities($this->popularActivities(3)),
                     ]);
                 }
                 $suggestedActivities = $nearestCity
@@ -347,16 +575,33 @@ class SearchController extends Controller
                     : $activities->take(6);
 
                 return response()->json([
-                    'html' => '',
-                    'count' => 0,
-                    'ai_summary' => $aiResponse['summary'] ?? null,
-                    'is_near_empty' => true,
-                    'nearest_city' => $nearestCity,
-                    'suggestions_html' => $this->renderActivities($suggestedActivities),
+                    'html'              => '',
+                    'count'             => 0,
+                    'ai_summary'        => $aiResponse['summary'] ?? null,
+                    'is_near_empty'     => true,
+                    'nearest_city'      => $nearestCity,
+                    'suggestions_html'  => $this->renderActivities($suggestedActivities),
                     'suggestions_count' => $suggestedActivities->count(),
                 ]);
             } else {
                 $activities = $nearbyActivities;
+
+                // Recompute suggestedDay/availableTimesOnDay from the activities that actually passed
+                // the distance filter — the pre-filter set may have had a different first element
+                if ($isDayFallback && $activities->isNotEmpty()) {
+                    $firstDay = $activities->first()->closest_day ?? null;
+                    if ($firstDay) {
+                        $suggestedDay = ucfirst($firstDay);
+                    }
+                }
+                if ($isTimeOnDayFallback && $activities->isNotEmpty() && $requestedDay) {
+                    $availableTimesOnDay = $activities
+                        ->flatMap(fn($act) => $act->schedules)
+                        ->filter(fn($s) => strtolower($s->day_of_week) === strtolower($requestedDay))
+                        ->pluck('start_time')->unique()->sort()->values()
+                        ->map(fn($t) => $this->formatTime($t))
+                        ->implode(', ');
+                }
             }
         } else {
             $activities = $activities->sortByDesc(fn($act) => $act->reviews->avg('rating') ?? 0);
@@ -365,25 +610,63 @@ class SearchController extends Controller
         // ===== NO RESULTS =====
         if ($activities->isEmpty()) {
             return response()->json([
-                'html' => '',
-                'count' => 0,
-                'ai_summary' => $aiResponse['summary'] ?? null,
+                'html'             => '',
+                'count'            => 0,
+                'ai_summary'       => $aiResponse['summary'] ?? null,
                 'suggestions_html' => $this->renderActivities($this->popularActivities(3)),
             ]);
         }
 
+        $requestedTimeFormatted = $requestedTime ? $this->formatTime($requestedTime) : null;
+        $categoryLabel = !empty($aiResponse['category_slug'])
+            ? \App\Models\Category::whereIn('slug', explode(',', $aiResponse['category_slug']))->pluck('name')->implode(' & ')
+            : 'activities';
+
+        // Build fallback message — always include time context when available
+        $fallbackMessage = null;
+
+        if ($isTimeOnDayFallback) {
+            $timesStr = $availableTimesOnDay ?: $suggestedTime;
+            $fallbackMessage = "No {$categoryLabel} on " . ucfirst($requestedDay ?? '') . " at {$requestedTimeFormatted} — available sessions on " . ucfirst($requestedDay ?? '') . ": {$timesStr}";
+
+        } elseif ($isDayFallback) {
+            if ($requestedTime && $suggestedDay) {
+                // Compute what times exist on the suggested day from the shown activities
+                $suggestedDayLower = strtolower($suggestedDay);
+                $timesOnSugDay = $activities
+                    ->flatMap(fn($act) => $act->schedules)
+                    ->filter(fn($s) => strtolower($s->day_of_week) === $suggestedDayLower)
+                    ->pluck('start_time')->unique()->sort()->values()
+                    ->map(fn($t) => $this->formatTime($t))
+                    ->implode(', ');
+
+                if ($timesOnSugDay) {
+                    $fallbackMessage = "No {$categoryLabel} on " . ucfirst($requestedDay ?? '') . " at {$requestedTimeFormatted} — closest sessions on {$suggestedDay}: {$timesOnSugDay}";
+                } else {
+                    $fallbackMessage = "No {$categoryLabel} on " . ucfirst($requestedDay ?? '') . " — showing closest sessions on {$suggestedDay}";
+                }
+            } else {
+                $fallbackMessage = "No {$categoryLabel} on " . ucfirst($requestedDay ?? '') . " — showing closest sessions on {$suggestedDay}";
+            }
+
+        } elseif ($isTimeFallback) {
+            $fallbackMessage = "No {$categoryLabel} at exactly {$requestedTimeFormatted} — showing nearest available sessions at {$suggestedTime}";
+        }
+
         return response()->json([
-            'html' => $this->renderActivities($activities),
-            'count' => $activities->count(),
-            'ai_summary' => $aiResponse['summary'] ?? null,
-            'parsed' => $aiResponse,
-            'is_fallback' => $isFallback,
-            'fallback_city' => $fallbackCity,
-            'is_time_fallback' => $isTimeFallback,
-            'suggested_time' => $suggestedTime,
-            'is_day_fallback' => $isDayFallback,
-            'suggested_day' => $suggestedDay,
-            'suggestions_html' => '',
+            'html'                    => $this->renderActivities($activities),
+            'count'                   => $activities->count(),
+            'ai_summary'              => $aiResponse['summary'] ?? null,
+            'parsed'                  => $aiResponse,
+            'is_fallback'             => $isFallback,
+            'fallback_city'           => $fallbackCity,
+            'is_time_fallback'        => $isTimeFallback,
+            'is_time_on_day_fallback' => $isTimeOnDayFallback,
+            'is_day_fallback'         => $isDayFallback,
+            'suggested_day'           => $suggestedDay,
+            'suggested_time'          => $suggestedTime,
+            'fallback_message'        => $fallbackMessage,
+            'suggestions_html'        => '',
         ]);
     }
 
@@ -430,25 +713,43 @@ class SearchController extends Controller
             );
         }
 
-        if (!empty($aiResponse['days_of_week']) && is_array($aiResponse['days_of_week'])) {
-            $days = array_map('strtolower', $aiResponse['days_of_week']);
-            $dbQuery->whereHas('schedules', fn($q) => $q->whereIn('day_of_week', $days));
-        } elseif (!empty($aiResponse['day_of_week'])) {
-            $dbQuery->whereHas(
-                'schedules',
-                fn($q) =>
-                $q->where('day_of_week', strtolower($aiResponse['day_of_week']))
-            );
-        }
-
         if (!empty($aiResponse['level']))
             $dbQuery->where('level', $aiResponse['level']);
 
+        // ── Day + time: combined in a SINGLE whereHas so they must match the same schedule record ──
+        $day        = null;
+        $days       = null;
+        $timeParsed = null;
+
+        if (!empty($aiResponse['days_of_week']) && is_array($aiResponse['days_of_week'])) {
+            $days = array_map('strtolower', $aiResponse['days_of_week']);
+        } elseif (!empty($aiResponse['day_of_week'])) {
+            $day = strtolower($aiResponse['day_of_week']);
+        }
+
         if (!empty($aiResponse['start_time'])) {
-            $parsed = date('H:i:s', strtotime($aiResponse['start_time']));
-            if ($parsed && $parsed !== '00:00:00') {
-                $dbQuery->whereHas('schedules', fn($q) => $q->whereTime('start_time', $parsed));
+            $p = date('H:i:s', strtotime($aiResponse['start_time']));
+            if ($p && $p !== '00:00:00') {
+                $timeParsed = $p;
             }
+        }
+
+        if ($days !== null) {
+            $dbQuery->whereHas('schedules', function ($q) use ($days, $timeParsed) {
+                $q->whereIn('day_of_week', $days);
+                if ($timeParsed) {
+                    $q->whereTime('start_time', $timeParsed);
+                }
+            });
+        } elseif ($day !== null) {
+            $dbQuery->whereHas('schedules', function ($q) use ($day, $timeParsed) {
+                $q->where('day_of_week', $day);
+                if ($timeParsed) {
+                    $q->whereTime('start_time', $timeParsed);
+                }
+            });
+        } elseif ($timeParsed !== null) {
+            $dbQuery->whereHas('schedules', fn($q) => $q->whereTime('start_time', $timeParsed));
         }
 
         return $dbQuery;
@@ -494,6 +795,7 @@ CRITICAL RULES:
 10. "beginner/s" → level = "beginner", "intermediate" → level = "intermediate", "advanced" → level = "advanced"
 11. Return ONLY JSON, no markdown
 12. If query mentions an activity NOT in the available slugs list → category_slug = null, keyword = the activity name
+13. Times like "1:00", "2:00" without AM/PM in a daytime context → assume PM (13:00, 14:00); early hours like "6:00", "7:00", "8:00" assume AM
 
 MOOD MAPPING (only when NO specific activity named):
 - "relaxing", "calm", "chill", "unwind" → "pilates"

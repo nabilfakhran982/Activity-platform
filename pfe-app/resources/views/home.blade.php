@@ -9,27 +9,16 @@
 
         {{-- VIDEO BACKGROUND --}}
         <div class="hero-video-wrapper">
-            <video
-                autoplay
-                muted
-                loop
-                playsinline
-                class="hero-video"
-                poster="{{ asset('images/hero-poster.jpg') }}"
-            >
+            <video autoplay muted loop playsinline class="hero-video" poster="{{ asset('images/hero-poster.jpg') }}">
                 <source src="{{ asset('videos/activio_hero.mp4') }}" type="video/mp4">
             </video>
-            {{-- Dark overlay --}}
             <div class="hero-overlay"></div>
         </div>
 
         {{-- CONTENT --}}
         <div class="max-w-3xl mx-auto text-center relative z-10">
-
             <div class="ai-badge inline-block mb-6">✦ AI-powered search</div>
-
-            <h1 class="font-display text-white text-5xl md:text-7xl font-bold leading-tight mb-6"
-                style="line-height:1.1">
+            <h1 class="font-display text-white text-5xl md:text-7xl font-bold leading-tight mb-6" style="line-height:1.1">
                 Discover &amp; book<br>
                 <span style="color:#D4A350">local activities</span><br>
                 you'll love
@@ -40,17 +29,14 @@
 
             {{-- Search bar --}}
             <div class="search-bar flex items-center gap-3 px-5 py-3 max-w-2xl mx-auto">
-                <svg class="text-white/40 flex-shrink-0" width="18" height="18" fill="none" stroke="currentColor"
-                    stroke-width="2" viewBox="0 0 24 24">
+                <svg class="text-white/40 flex-shrink-0" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
                 </svg>
                 <input type="text" id="home-search"
                     placeholder='Try "karate for kids near Achrafieh on Saturday"'
                     class="flex-1 bg-transparent text-white placeholder-white/30 text-sm outline-none py-1">
                 <button onclick="window.location.href='/search?q='+encodeURIComponent(document.getElementById('home-search').value)"
-                    class="search-btn px-5 py-2.5 text-sm font-medium whitespace-nowrap">
-                    Search
-                </button>
+                    class="search-btn px-5 py-2.5 text-sm font-medium whitespace-nowrap">Search</button>
             </div>
 
             {{-- Quick suggestions --}}
@@ -70,19 +56,38 @@
                 $avgRating = \App\Models\Review::avg('rating');
                 $formattedRating = $avgRating ? number_format($avgRating, 1) : 'N/A';
             @endphp
-            @foreach([
-                [$activitiesCount . '+', 'Activities'],
-                [$centersCount . '+', 'Centers'],
-                [$formattedRating, 'Avg Rating'],
-            ] as $stat)
-                <div class="text-center border border-white/10 rounded-2xl py-4 px-2"
-                    style="background:rgba(255,255,255,0.04)">
+            @foreach([[$activitiesCount.'+','Activities'],[$centersCount.'+','Centers'],[$formattedRating,'Avg Rating']] as $stat)
+                <div class="text-center border border-white/10 rounded-2xl py-4 px-2" style="background:rgba(255,255,255,0.04)">
                     <div class="font-display text-white text-2xl font-bold">{{ $stat[0] }}</div>
                     <div class="text-white/40 text-xs mt-1">{{ $stat[1] }}</div>
                 </div>
             @endforeach
         </div>
     </section>
+
+    {{-- ============ PERSONALIZED RECOMMENDATIONS ============ --}}
+    @auth
+        @if($recommendations->isNotEmpty())
+        <section class="max-w-6xl mx-auto px-6 py-16">
+            <div class="flex items-end justify-between mb-10">
+                <div>
+                    <p class="text-xs uppercase tracking-widest mb-2" style="color:#D4A350">
+                        ✦ {{ $recommendationLabel }}
+                    </p>
+                    <h2 class="font-display text-3xl md:text-4xl font-bold">{{ $recommendationTitle }}</h2>
+                </div>
+                <a href="{{ route('search') }}" class="text-sm text-[#8a7a6a] hover:text-[#1a1a18] transition-colors hidden md:block">
+                    Explore more →
+                </a>
+            </div>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                @foreach($recommendations as $act)
+                    <x-activity-card :act="$act" />
+                @endforeach
+            </div>
+        </section>
+        @endif
+    @endauth
 
     {{-- ============ CATEGORIES ============ --}}
     <section class="max-w-6xl mx-auto px-6 py-20">
@@ -119,7 +124,7 @@
                     <h2 class="font-display text-2xl font-bold">All Categories</h2>
                     <button onclick="closeCategoriesModal()" class="text-gray-500 hover:text-gray-700">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                         </svg>
                     </button>
                 </div>
@@ -146,7 +151,6 @@
             </div>
             <a href="{{ route('activities') }}" class="text-sm text-[#8a7a6a] hover:text-[#1a1a18] transition-colors hidden md:block">See all →</a>
         </div>
-
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             @foreach($activities as $act)
                 <x-activity-card :act="$act" />
@@ -161,16 +165,14 @@
                 <p class="text-xs uppercase tracking-widest text-[#a09890] mb-2">Simple &amp; smart</p>
                 <h2 class="font-display text-3xl md:text-4xl font-bold">How Activio works</h2>
             </div>
-
             <div class="space-y-10">
                 @php
                     $steps = [
-                        ['num' => '1', 'title' => 'Describe what you need', 'desc' => 'Type naturally — "karate for my 7-year-old near Achrafieh on Saturday". Our AI understands you.'],
-                        ['num' => '2', 'title' => 'Compare &amp; choose', 'desc' => 'See matched activities with AI-powered summaries, ratings, prices, and schedules — side by side.'],
-                        ['num' => '3', 'title' => 'Book in seconds', 'desc' => 'No calls, no WhatsApp. Select your slot and confirm your booking directly on the platform.'],
+                        ['num'=>'1','title'=>'Describe what you need','desc'=>'Type naturally — "karate for my 7-year-old near Achrafieh on Saturday". Our AI understands you.'],
+                        ['num'=>'2','title'=>'Compare &amp; choose','desc'=>'See matched activities with AI-powered summaries, ratings, prices, and schedules — side by side.'],
+                        ['num'=>'3','title'=>'Book in seconds','desc'=>'No calls, no WhatsApp. Select your slot and confirm your booking directly on the platform.'],
                     ];
                 @endphp
-
                 @foreach($steps as $step)
                     <div class="flex items-start gap-6">
                         <div class="step-number font-display">{{ $step['num'] }}</div>
@@ -195,28 +197,40 @@
                 <p class="text-white/55 mb-8 leading-relaxed">
                     Don't browse endless lists. Just say what you're looking for — age, location, day — and our AI finds the perfect match and explains why it's right for you.
                 </p>
-                <div class="bg-white/8 border border-white/15 rounded-2xl p-5 mb-8"
-                    style="background:rgba(255,255,255,0.06)">
+                <div class="border border-white/15 rounded-2xl p-5 mb-8" style="background:rgba(255,255,255,0.06)">
                     <p class="text-white/40 text-xs mb-2">Example search</p>
                     <p class="text-white text-sm">"something relaxing for me after work, not too intense"</p>
                     <div class="mt-3 pt-3 border-t border-white/10">
                         <div class="ai-badge inline-block text-xs">✦ AI suggests: Pilates Flow, Swimming, Light Fitness</div>
                     </div>
                 </div>
-                <a href="{{ route('search') }}" class="search-btn inline-block px-8 py-3.5 text-sm font-medium rounded-full">
-                    Try it now
-                </a>
+                <a href="{{ route('search') }}" class="search-btn inline-block px-8 py-3.5 text-sm font-medium rounded-full">Try it now</a>
             </div>
         </div>
     </section>
 
     <script>
+        // Save location to session for recommendations
+        @auth
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(pos => {
+                fetch('/save-location', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    },
+                    body: JSON.stringify({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+                });
+            }, () => {}, { timeout: 5000 });
+        }
+        @endauth
+
         const categoryList = document.querySelector(".category-list");
         categoryList.addEventListener("click", (e) => {
             const categoryCard = e.target.closest(".category-card");
             if (categoryCard) {
-                const slug = categoryCard.getAttribute("data-slug");
-                window.location.href = `/activities?category=${slug}`;
+                window.location.href = `/activities?category=${categoryCard.getAttribute("data-slug")}`;
             }
         });
 
@@ -225,8 +239,7 @@
             categoryModalList.addEventListener("click", (e) => {
                 const categoryCard = e.target.closest(".category-card");
                 if (categoryCard) {
-                    const slug = categoryCard.getAttribute("data-slug");
-                    window.location.href = `/activities?category=${slug}`;
+                    window.location.href = `/activities?category=${categoryCard.getAttribute("data-slug")}`;
                 }
             });
         }
@@ -242,30 +255,22 @@
         }
 
         document.getElementById('home-search').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                window.location.href = '/search?q=' + encodeURIComponent(this.value);
-            }
+            if (e.key === 'Enter') window.location.href = '/search?q=' + encodeURIComponent(this.value);
         });
 
         function selectSuggestion(btn, name) {
             document.querySelectorAll('.suggestion-btn').forEach(b => {
                 b.classList.remove('active-suggestion');
-                b.style.borderColor = '';
-                b.style.color = '';
+                b.style.borderColor = ''; b.style.color = '';
             });
-            btn.style.borderColor = '#D4A350';
-            btn.style.color = '#D4A350';
+            btn.style.borderColor = '#D4A350'; btn.style.color = '#D4A350';
             btn.classList.add('active-suggestion');
-            const input = document.getElementById('home-search');
-            input.value = name;
-            input.focus();
+            document.getElementById('home-search').value = name;
+            document.getElementById('home-search').focus();
         }
 
-        // Close modal when clicking outside
         document.getElementById('categoriesModal')?.addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeCategoriesModal();
-            }
+            if (e.target === this) closeCategoriesModal();
         });
     </script>
 </x-layouts.app-main>

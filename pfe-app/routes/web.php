@@ -41,6 +41,7 @@ Route::post('/schedule/{schedule}/book', [BookingController::class, 'store'])->n
 Route::post('/booking/{booking}/status', [BookingController::class, 'updateStatus'])->middleware(['auth', 'center_owner']);
 Route::delete('/booking/{booking}/delete', [BookingController::class, 'destroy'])->middleware('auth');
 
+Route::post('/save-location', [HomeController::class, 'saveLocation'])->middleware('auth');
 
 Route::middleware('auth')->group(function () {
     Route::post('/activity/{activity}/favourite', [FavouriteController::class, 'toggle'])->name('activity.favourite');
@@ -50,6 +51,7 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth'])->group(function () {
     Route::post('/center-register', [CenterController::class, 'store'])->name('center.register');
 });
+
 
 Route::middleware('auth')->group(function () {
     Route::get('/notifications', [NotificationController::class, 'index']);
