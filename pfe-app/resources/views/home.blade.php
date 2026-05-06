@@ -72,7 +72,7 @@
             <div class="flex items-end justify-between mb-10">
                 <div>
                     <p class="text-xs uppercase tracking-widest mb-2" style="color:#D4A350">
-                        ✦ {{ $recommendationLabel }}
+                        {{ $recommendationLabel }}
                     </p>
                     <h2 class="font-display text-3xl md:text-4xl font-bold">{{ $recommendationTitle }}</h2>
                 </div>

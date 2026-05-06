@@ -173,12 +173,11 @@ class SearchController extends Controller
                     ->whereNotIn('id', $bookedActivityIds)
                     ->withCount('bookings')
                     ->orderByDesc('bookings_count')
-                    ->take(6)
                     ->get();
 
                 if ($recommendations->isNotEmpty()) {
-                    $recommendationLabel = 'RECOMMENDED FOR YOU';
-                    $recommendationTitle = 'Based on your interest in ' . $recommendations->first()->category->name;
+                    $recommendationLabel = '✦ RECOMMENDED FOR YOU';
+                    $recommendationTitle = '';
                 }
             }
         }

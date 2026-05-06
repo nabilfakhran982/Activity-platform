@@ -106,12 +106,8 @@ class HomeController extends Controller
                 $recommendations = $recs->take(3);
 
                 if ($recommendations->isNotEmpty()) {
-                    $categoryNames = Category::whereIn('id', $preferredCategoryIds)
-                        ->pluck('name')
-                        ->take(2)
-                        ->join(' & ');
-                    $recommendationLabel = 'Recommended for you';
-                    $recommendationTitle = "Based on your interest in {$categoryNames}";
+                    $recommendationLabel = '✦ RECOMMENDED FOR YOU';
+                    $recommendationTitle = '';
                 }
             }
         }
