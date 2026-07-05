@@ -12,6 +12,8 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CenterController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\CreditController;
 
 // Web Routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -89,6 +91,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/activity/{activity}/delete', [AdminController::class, 'destroy'])->name('activity.destroy');
     Route::post('/activity/{activity}/toggle-active', [AdminController::class, 'toggleActive'])->name('activity.toggle-active');
     Route::get('/bookings', [AdminController::class, 'bookings'])->name('bookings');
+    Route::get('/payments', [AdminController::class, 'payments'])->name('payments');
     Route::get('/reviews', [AdminController::class, 'reviews'])->name('reviews');
     Route::delete('/reviews/{review}', [AdminController::class, 'destroyReview'])->name('reviews.destroy');
     Route::get('/profile', [AdminController::class, 'profile'])->name('profile');
@@ -103,5 +106,21 @@ Route::middleware('auth')->group(function () {
     Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
     Route::post('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
 });
+
+// Credit & Payment Routes
+Route::middleware('auth')->prefix('credits')->name('credits.')->group(function () {
+    Route::get('/', [CreditController::class, 'dashboard'])->name('dashboard');
+    Route::get('/purchase', [CreditController::class, 'purchase'])->name('purchase');
+    Route::get('/api/stats', [CreditController::class, 'getStats'])->name('stats');
+});
+
+Route::middleware('auth')->prefix('payment')->name('payment.')->group(function () {
+    Route::get('/packages', [PaymentController::class, 'showPackages'])->name('packages');
+    Route::post('/create-intent', [PaymentController::class, 'createPaymentIntent'])->name('create-intent');
+    Route::post('/confirm', [PaymentController::class, 'confirmPayment'])->name('confirm');
+});
+
+// Webhook (no auth required for webhook)
+Route::post('/webhook/stripe', [PaymentController::class, 'webhook'])->withoutMiddleware(['web', 'csrf']);
 
 require __DIR__ . '/auth.php';

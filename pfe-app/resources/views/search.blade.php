@@ -207,7 +207,7 @@
             </div>
 
             {{-- Divider --}}
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
+            <div id="you-might-like-divider" style="display:flex;align-items:center;gap:12px;margin-bottom:24px;" class="hidden">
                 <div style="flex:1;height:1px;background:#E8E5DF"></div>
                 <span
                     style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:#a09890;font-weight:600">You
@@ -357,7 +357,25 @@
 
                     const data = await res.json();
                     document.getElementById('loading').classList.add('hidden');
+                    // Handle insufficient credits (402 response)
+                    if (res.status === 402 || data.requires_credit_purchase) {
+                        document.getElementById('no-results').classList.remove('hidden');
+                        document.getElementById('no-results-title').textContent = 'Insufficient Credits';
+                        document.getElementById('no-results-subtitle').innerHTML = `
+                            You don't have enough credits to search. Your current balance is <strong>${data.current_balance || 0}</strong> credits.
+                            <br><br>
+                            <a href="{{ route('payment.packages') }}" class="inline-block text-white font-semibold py-2 px-6 rounded-lg transition" style="background:#D4A350;">
+                                Buy Credits
+                            </a>
+                        `;
+                        return;
+                    }
 
+                    // Handle login required
+                    if (data.requires_login) {
+                        window.location.href = '{{ route("login") }}';
+                        return;
+                    }
                     console.log('fallback_message:', data.fallback_message);
                     console.log('is_day_fallback:', data.is_day_fallback);
                     // AI Summary

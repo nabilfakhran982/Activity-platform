@@ -76,6 +76,15 @@
                 <div class="admin-stat-label">Bookings</div>
             </div>
         </div>
+        <div class="admin-stat-card">
+            <div class="admin-stat-icon" style="background:rgba(76,175,80,0.12)">
+                <span class="material-icons" style="color:#4CAF50">payment</span>
+            </div>
+            <div class="min-w-0">
+                <div class="admin-stat-value">{{ $stats['payments'] }}</div>
+                <div class="admin-stat-label">Payments</div>
+            </div>
+        </div>
     </div>
 
     {{-- CHARTS --}}
@@ -108,10 +117,39 @@
             </div>
         </div>
 
+        {{-- Payment amount trend --}}
+        <div class="chart-card chart-card-full">
+            <div class="chart-title">Payment Volume</div>
+            <div class="chart-subtitle">Successful payments — last 6 months ($)</div>
+            <div class="chart-wrap">
+                <canvas id="paymentAmountChart"></canvas>
+            </div>
+        </div>
+
+    </div>
+
+    {{-- PAYMENT STATS --}}
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="admin-stat-card" style="border-left:3px solid #4CAF50">
+            <div style="color:#a09890;font-size:0.85rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">Succeeded</div>
+            <div class="admin-stat-value" style="color:#4CAF50">{{ $paymentStats['succeeded'] }}</div>
+        </div>
+        <div class="admin-stat-card" style="border-left:3px solid #FFC107">
+            <div style="color:#a09890;font-size:0.85rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">Pending</div>
+            <div class="admin-stat-value" style="color:#FFC107">{{ $paymentStats['pending'] }}</div>
+        </div>
+        <div class="admin-stat-card" style="border-left:3px solid #e05252">
+            <div style="color:#a09890;font-size:0.85rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">Failed</div>
+            <div class="admin-stat-value" style="color:#e05252">{{ $paymentStats['failed'] }}</div>
+        </div>
+        <div class="admin-stat-card" style="border-left:3px solid #D4A350">
+            <div style="color:#a09890;font-size:0.85rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px">Total ($)</div>
+            <div class="admin-stat-value" style="color:#D4A350">${{ number_format($paymentStats['total_amount'], 2) }}</div>
+        </div>
     </div>
 
     {{-- RECENT --}}
-    <div class="grid md:grid-cols-2 gap-6">
+    <div class="grid md:grid-cols-3 gap-6">
 
         {{-- Recent Users --}}
         <div class="admin-card">
@@ -184,6 +222,57 @@
                                 <span class="badge {{ $booking->status === 'confirmed' ? 'badge-green' : ($booking->status === 'cancelled' ? 'badge-red' : 'badge-gold') }}">
                                     {{ ucfirst($booking->status) }}
                                 </span>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            @endif
+        </div>
+
+        {{-- Recent Payments --}}
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h2 class="admin-card-title">Recent Payments</h2>
+                <a href="{{ route('admin.payments') }}" class="admin-action-btn">View all</a>
+            </div>
+            @if($recentPayments->isEmpty())
+                <div class="admin-no-results">No recent payments</div>
+            @else
+            <div class="admin-table-wrapper">
+                <table class="admin-table" style="min-width:400px">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($recentPayments as $payment)
+                        <tr>
+                            <td>
+                                <div class="flex items-center gap-2">
+                                    <div class="admin-avatar" style="width:32px;height:32px;font-size:0.85rem">{{ strtoupper(substr($payment->user->name, 0, 1)) }}</div>
+                                    <div>
+                                        <p class="font-medium text-sm">{{ $payment->user->name }}</p>
+                                        <p class="text-xs" style="color:#8a7a6a">{{ $payment->user->email }}</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="font-medium">${{ number_format($payment->amount / 100, 2) }}</div>
+                                <div class="text-xs" style="color:#8a7a6a">{{ number_format($payment->credits_purchased, 0) }} credits</div>
+                            </td>
+                            <td>
+                                @if($payment->status === 'succeeded')
+                                    <span class="badge badge-green">✓ Success</span>
+                                @elseif($payment->status === 'pending')
+                                    <span class="badge badge-gold">⏳ Pending</span>
+                                @else
+                                    <span class="badge badge-red">✕ Failed</span>
+                                @endif
                             </td>
                         </tr>
                         @endforeach
@@ -271,6 +360,38 @@
                     backgroundColor: accentBg,
                     borderWidth: 2.5,
                     pointBackgroundColor: accent,
+                    pointRadius: 4,
+                    fill: true,
+                    tension: 0.4,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: grid },
+                        ticks: { callback: v => '$' + v }
+                    },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        // 4. Payment amount trend — Line
+        new Chart(document.getElementById('paymentAmountChart'), {
+            type: 'line',
+            data: {
+                labels: @json($paymentAmount->keys()),
+                datasets: [{
+                    label: 'Payment Amount ($)',
+                    data: @json($paymentAmount->values()),
+                    borderColor: '#4CAF50',
+                    backgroundColor: 'rgba(76,175,80,0.12)',
+                    borderWidth: 2.5,
+                    pointBackgroundColor: '#4CAF50',
                     pointRadius: 4,
                     fill: true,
                     tension: 0.4,

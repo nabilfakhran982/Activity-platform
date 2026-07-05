@@ -26,6 +26,12 @@
                         class="nav-link px-4 py-2 rounded-full border border-white/20 hover:border-white/50 transition-colors text-sm">
                         My Dashboard
                     </a>
+                @else
+                    {{-- Buy Credits Button for Regular Users --}}
+                    <a href="{{ route('payment.packages') }}"
+                        class="nav-link px-4 py-2 rounded-full border border-white/20 hover:border-white/50 hover:border-[#D4A350] transition-colors text-sm flex items-center gap-2">
+                        <span style="color:#D4A350">💳</span> Buy Credits
+                    </a>
                 @endif
 
                 @auth

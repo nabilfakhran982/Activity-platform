@@ -74,4 +74,21 @@ class User extends Authenticatable
     {
         return $this->hasMany(\App\Models\Notification::class);
     }
+
+    public function credits()
+    {
+        return $this->hasOne(UserCredit::class);
+    }
+
+    /**
+     * Get or create user credits
+     */
+    public function getCredits()
+    {
+        return $this->credits ?? $this->credits()->create([
+            'balance' => 0,
+            'lifetime_purchased' => 0,
+            'lifetime_used' => 0,
+        ]);
+    }
 }

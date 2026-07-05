@@ -83,10 +83,12 @@
                     headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }
                 });
                 document.getElementById('notif-badge').style.display = 'none';
-                document.querySelectorAll('.notif-item.unread').forEach(el => {
+                const l = document.querySelectorAll('.notif-item.unread').forEach(el => {
                     el.classList.remove('unread');
                     el.querySelector('.notif-unread-dot')?.remove();
                 });
+                console.log(l);
+                console.log('All notifications marked as read');
             }
 
             document.addEventListener('click', e => {

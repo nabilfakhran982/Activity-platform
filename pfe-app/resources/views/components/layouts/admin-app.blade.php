@@ -64,6 +64,12 @@
                 Bookings
             </a>
 
+            <a href="{{ route('admin.payments') }}"
+                class="sidebar-link {{ request()->routeIs('admin.payments') ? 'active' : '' }}">
+                <span class="material-icons">payment</span>
+                Payments
+            </a>
+
             <a href="{{ route('admin.reviews') }}"
                 class="sidebar-link {{ request()->routeIs('admin.reviews') ? 'active' : '' }}">
                 <span class="material-icons">star</span>

@@ -7,6 +7,7 @@ use App\Models\Booking;
 use App\Models\Center;
 use App\Models\Review;
 use App\Models\User;
+use App\Models\StripePayment;
 use Illuminate\Http\Request;
 
 class AdminController extends Controller
@@ -18,10 +19,21 @@ class AdminController extends Controller
             'centers' => Center::count(),
             'activities' => Activity::count(),
             'bookings' => Booking::count(),
+            'payments' => StripePayment::count(),
         ];
 
         $recentUsers = User::latest()->take(5)->get();
         $recentBookings = Booking::with(['user', 'schedule.activity.center'])->latest()->take(5)->get();
+        $recentPayments = StripePayment::with('user')->where('status', 'succeeded')->latest()->take(5)->get();
+
+        // ===== PAYMENT DATA =====
+        $totalPayments = StripePayment::where('status', 'succeeded')->sum('amount');
+        $paymentStats = [
+            'total_amount' => round($totalPayments / 100, 2), // Convert cents to dollars
+            'succeeded' => StripePayment::where('status', 'succeeded')->count(),
+            'pending' => StripePayment::where('status', 'pending')->count(),
+            'failed' => StripePayment::where('status', 'failed')->count(),
+        ];
 
         // ===== CHART DATA =====
 
@@ -61,13 +73,29 @@ class AdminController extends Controller
             $revenue[$label] = round($revenueRaw[$label] ?? 0, 2);
         }
 
+        // 4. Payment amount per month (last 6 months)
+        $paymentAmountRaw = StripePayment::where('status', 'succeeded')
+            ->where('created_at', '>=', now()->subMonths(6))
+            ->get()
+            ->groupBy(fn($p) => $p->created_at->format('M Y'))
+            ->map(fn($group) => $group->sum('amount') / 100); // Convert from cents
+
+        $paymentAmount = collect();
+        for ($i = 5; $i >= 0; $i--) {
+            $label = now()->subMonths($i)->format('M Y');
+            $paymentAmount[$label] = round($paymentAmountRaw[$label] ?? 0, 2);
+        }
+
         return view('admin.dashboard', compact(
             'stats',
             'recentUsers',
             'recentBookings',
+            'recentPayments',
+            'paymentStats',
             'months',
             'popularCategories',
-            'revenue'
+            'revenue',
+            'paymentAmount'
         ));
     }
 
@@ -161,6 +189,13 @@ class AdminController extends Controller
     public function profile()
     {
         return view('admin.profile');
+    }
+
+    // ===== PAYMENTS =====
+    public function payments()
+    {
+        $payments = \App\Models\StripePayment::with(['user'])->latest()->paginate(20);
+        return view('admin.payments', compact('payments'));
     }
 
 

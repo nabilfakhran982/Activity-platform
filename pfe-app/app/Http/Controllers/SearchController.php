@@ -6,6 +6,7 @@ use App\Models\Activity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Auth;
+use App\Services\CreditService;
 
 class SearchController extends Controller
 {
@@ -187,6 +188,33 @@ class SearchController extends Controller
 
     public function search(Request $request)
     {
+        $user = Auth::user();
+
+        // Check if user is authenticated
+        if (!$user) {
+            return response()->json([
+                'html' => '',
+                'count' => 0,
+                'error' => 'Please log in to search',
+                'requires_login' => true,
+            ]);
+        }
+
+        // Check user credits
+        $creditService = new CreditService();
+        if (!$creditService->canSearch($user)) {
+            return response()->json([
+                'html' => '',
+                'count' => 0,
+                'error' => 'Insufficient credits. Please purchase more credits to continue searching.',
+                'requires_credit_purchase' => true,
+                'current_balance' => $creditService->getBalance($user),
+            ], 402); // 402 Payment Required
+        }
+
+        // Deduct credit for this search
+        $creditService->deductSearchCredit($user);
+
         $query = $request->input('query');
         $queryLower = strtolower($query);
         $userLat = $request->input('lat');
