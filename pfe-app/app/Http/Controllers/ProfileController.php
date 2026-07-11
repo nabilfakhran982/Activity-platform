@@ -5,13 +5,23 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use App\Services\CreditService;
 
 class ProfileController extends Controller
 {
+    protected CreditService $creditService;
+
+    public function __construct()
+    {
+        $this->middleware('auth');
+        $this->creditService = new CreditService();
+    }
+
     public function index()
     {
         $user = Auth::user()->load(['bookings.schedule.activity.center', 'bookings.schedule.activity.images', 'bookings.schedule.activity.category', 'bookings.review', 'favourites.activity.images', 'favourites.activity.category']);
-        return view('profile', compact('user'));
+        $userStats = $this->creditService->getStats($user);
+        return view('profile', compact('user', 'userStats'));
     }
 
     public function update(Request $request)

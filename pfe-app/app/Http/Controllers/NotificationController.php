@@ -12,7 +12,7 @@ class NotificationController extends Controller
     {
         $notifications = Auth::user()->notifications()
             ->latest()
-            ->take(10)
+            ->take(3)
             ->get();
 
         $unreadCount = Auth::user()->notifications()->where('is_read', false)->count();

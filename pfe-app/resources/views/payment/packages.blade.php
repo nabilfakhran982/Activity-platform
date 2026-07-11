@@ -1,4 +1,4 @@
-<x-layouts.app-main title="Buy Credits — Activo">
+<x-layouts.app-main title="Buy Credits">
 
     @push('styles')
         <style>
@@ -515,8 +515,12 @@
     @push('scripts')
         <script src="https://js.stripe.com/v3/"></script>
         <script>
+            // Debug key and packages
+            console.log('Stripe key:', '{{ $stripePublicKey ?? "EMPTY" }}');
+            console.log('Packages passed to view:', @json($packages ?? []));
+
             // Stripe setup
-            const stripe = Stripe('{{ env('STRIPE_PUBLIC_KEY') }}');
+            const stripe = Stripe('{{ $stripePublicKey }}');
             const elements = stripe.elements();
             const cardElement = elements.create('card', {
                 style: {
@@ -532,7 +536,7 @@
             let selectedPackage = null;
 
             // Debug: Log packages data
-            const packages = @json($packages);
+            var packages = @json($packages);
             console.log('Packages loaded:', packages);
             console.log('Packages type:', typeof packages);
             console.log('Packages is array:', Array.isArray(packages));

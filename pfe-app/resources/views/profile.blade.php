@@ -29,6 +29,21 @@
             {{-- LEFT --}}
             <div class="md:col-span-1 space-y-6">
                 <div class="profile-card">
+                    <h2 class="profile-card-title">Credit Balance</h2>
+                    <div style="display:flex;flex-direction:column;gap:14px;">
+                        <div style="font-size:2.5rem;font-weight:700;color:#1a1a18;">{{ number_format($userStats['balance'] ?? 0) }}</div>
+                        <p style="margin:0;color:#8a7a6a;">Available credits</p>
+                        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
+                            <div style="font-size:0.75rem;font-weight:700;color:#8a7a6a;">Purchased</div>
+                            <div style="font-size:0.75rem;font-weight:700;color:#8a7a6a;text-align:right;">Used</div>
+                            <div style="font-size:1.05rem;font-weight:600;color:#1a1a18;">{{ number_format($userStats['lifetime_purchased'] ?? 0) }}</div>
+                            <div style="font-size:1.05rem;font-weight:600;color:#1a1a18;text-align:right;">{{ number_format($userStats['lifetime_used'] ?? 0) }}</div>
+                        </div>
+                        <a href="{{ route('payment.packages') }}" class="search-btn w-full py-3 text-sm mt-2 inline-flex justify-center">Buy More Credits</a>
+                    </div>
+                </div>
+
+                <div class="profile-card">
                     <h2 class="profile-card-title">Personal Info</h2>
                     <form id="profile-form">
                         @csrf

@@ -26,8 +26,9 @@ class PaymentController extends Controller
     {
         $packages = array_values($this->stripeService->getCreditPackages());
         $userStats = $this->creditService->getStats(Auth::user());
+        $stripePublicKey = config('services.stripe.public');
 
-        return view('payment.packages', compact('packages', 'userStats'));
+        return view('payment.packages', compact('packages', 'userStats', 'stripePublicKey'));
     }
 
     /**

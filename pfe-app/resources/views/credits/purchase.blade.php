@@ -89,13 +89,15 @@
 @push('scripts')
 <script src="https://js.stripe.com/v3/"></script>
 <script>
+    console.log('Stripe key from config:', '{{ config("services.stripe.public") }}');
+    console.log('Packages data:', @json($packages));
     const stripe = Stripe('{{ config("services.stripe.public") }}');
     const elements = stripe.elements();
     const cardElement = elements.create('card');
     cardElement.mount('#card-element');
 
     let selectedPackageId = null;
-    let packages = @json($packages);
+    const creditPackages = @json($packages);
 
     cardElement.addEventListener('change', function(event) {
         const displayError = document.getElementById('card-errors');
@@ -104,10 +106,14 @@
 
     function selectPackage(packageId) {
         selectedPackageId = packageId;
-        const pkg = packages[packageId];
+        const pkg = creditPackages.find(p => p.id == packageId);
+        if (!pkg) {
+            alert('Selected package not found.');
+            return;
+        }
 
         document.getElementById('credits-amount').textContent = pkg.credits;
-        document.getElementById('amount-display').textContent = pkg.amount.toFixed(2);
+        document.getElementById('amount-display').textContent = Number(pkg.amount).toFixed(2);
 
         document.getElementById('payment-modal').classList.remove('hidden');
 

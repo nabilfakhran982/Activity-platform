@@ -45,7 +45,7 @@ class CreditController extends Controller
      */
     public function purchase()
     {
-        $packages = (new \App\Services\StripeService())->getCreditPackages();
+        $packages = array_values((new \App\Services\StripeService())->getCreditPackages());
         $userStats = $this->creditService->getStats(Auth::user());
 
         return view('credits.purchase', compact('packages', 'userStats'));

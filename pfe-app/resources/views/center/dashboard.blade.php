@@ -18,7 +18,7 @@
             .chart-card-full {
                 grid-column: 1 / -1;
             }
-            .chart-title {
+            .chart-title {class="chart-card"
                 font-family: 'Playfair Display', serif;
                 font-size: 15px;
                 font-weight: 700;

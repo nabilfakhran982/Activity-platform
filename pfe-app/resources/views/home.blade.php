@@ -34,8 +34,8 @@
                 </svg>
                 <input type="text" id="home-search"
                     placeholder='Try "karate for kids near Achrafieh on Saturday"'
-                    class="flex-1 bg-transparent text-white placeholder-white/30 text-sm outline-none py-1">
-                <button onclick="window.location.href='/search?q='+encodeURIComponent(document.getElementById('home-search').value)"
+                    class="flex-1 bg-transparent text-white placeholder-white/30 text-sm outline-none py-1" />
+                <button onclick="window.location.href = '/search?q=' + encodeURIComponent(document.getElementById('home-search').value)"
                     class="search-btn px-5 py-2.5 text-sm font-medium whitespace-nowrap">Search</button>
             </div>
 

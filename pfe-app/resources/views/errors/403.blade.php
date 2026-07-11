@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>404 - Page Not Found | Activio</title>
+    <title>403 - Access Forbidden | Activio</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Display:wght@400;500;700&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
@@ -38,7 +38,7 @@
         .blob-1 {
             width: 300px;
             height: 300px;
-            background: #D4A350;
+            background: #FF6B6B;
             top: -100px;
             left: -100px;
             animation-duration: 25s;
@@ -47,7 +47,7 @@
         .blob-2 {
             width: 250px;
             height: 250px;
-            background: #e05252;
+            background: #FFA500;
             bottom: -50px;
             right: -50px;
             animation-duration: 30s;
@@ -57,7 +57,7 @@
         .blob-3 {
             width: 200px;
             height: 200px;
-            background: #D4A350;
+            background: #FF6B6B;
             top: 50%;
             left: 50%;
             animation-duration: 28s;
@@ -85,12 +85,32 @@
             width: 100%;
         }
 
-        /* 404 Number Animation */
+        /* Lock Icon with animation */
+        .lock-icon {
+            font-size: 100px;
+            margin-bottom: 30px;
+            animation: shake 2s ease-in-out infinite;
+            color: #FF6B6B;
+        }
+
+        @keyframes shake {
+            0%, 100% {
+                transform: rotate(0deg);
+            }
+            25% {
+                transform: rotate(-5deg);
+            }
+            75% {
+                transform: rotate(5deg);
+            }
+        }
+
+        /* 403 Number Animation */
         .error-code {
             font-family: 'DM Display', sans-serif;
             font-size: clamp(120px, 25vw, 200px);
             font-weight: 700;
-            background: linear-gradient(135deg, #D4A350 0%, #e05252 100%);
+            background: linear-gradient(135deg, #FF6B6B 0%, #FFA500 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -107,22 +127,6 @@
             to {
                 opacity: 1;
                 transform: translateY(0);
-            }
-        }
-
-        /* Lost Icon */
-        .lost-icon {
-            font-size: 80px;
-            margin-bottom: 30px;
-            animation: bounce 2s ease-in-out infinite;
-        }
-
-        @keyframes bounce {
-            0%, 100% {
-                transform: translateY(0);
-            }
-            50% {
-                transform: translateY(-20px);
             }
         }
 
@@ -178,13 +182,13 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #D4A350 0%, #c99340 100%);
-            color: #1a1a18;
+            background: linear-gradient(135deg, #FF6B6B 0%, #FF5252 100%);
+            color: #fff;
         }
 
         .btn-primary:hover {
             transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(212, 163, 80, 0.3);
+            box-shadow: 0 10px 30px rgba(255, 107, 107, 0.4);
         }
 
         .btn-primary:active {
@@ -192,13 +196,13 @@
         }
 
         .btn-secondary {
-            background: rgba(212, 163, 80, 0.1);
-            color: #D4A350;
-            border: 2px solid #D4A350;
+            background: rgba(255, 107, 107, 0.1);
+            color: #FF6B6B;
+            border: 2px solid #FF6B6B;
         }
 
         .btn-secondary:hover {
-            background: rgba(212, 163, 80, 0.2);
+            background: rgba(255, 107, 107, 0.2);
             transform: translateY(-3px);
         }
 
@@ -210,196 +214,90 @@
             font-size: 16px;
         }
 
-        /* Search box suggestion */
-        .search-suggestion {
+        /* Additional info box */
+        .info-box {
             margin-top: 50px;
-            padding-top: 40px;
-            border-top: 1px solid rgba(212, 163, 80, 0.2);
+            padding: 20px;
+            background: rgba(255, 107, 107, 0.08);
+            border: 1px solid rgba(255, 107, 107, 0.3);
+            border-radius: 12px;
             animation: fadeInUp 0.8s ease-out 0.4s both;
         }
 
-        .search-suggestion p {
-            font-size: 13px;
-            color: #8a7a6a;
-            margin-bottom: 15px;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
+        .info-box p {
+            font-size: 14px;
+            color: #a09890;
+            margin: 0;
         }
 
-        .search-box {
-            display: flex;
-            gap: 8px;
-        }
-
-        .search-input {
-            flex: 1;
-            padding: 12px 16px;
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(212, 163, 80, 0.3);
-            border-radius: 12px;
-            color: #fff;
-            font-family: 'DM Sans', sans-serif;
-            transition: all 0.3s ease;
-        }
-
-        .search-input::placeholder {
-            color: #8a7a6a;
-        }
-
-        .search-input:focus {
-            outline: none;
-            background: rgba(255, 255, 255, 0.12);
-            border-color: #D4A350;
-            box-shadow: 0 0 20px rgba(212, 163, 80, 0.2);
-        }
-
-        .search-btn {
-            padding: 12px 24px;
-            background: #D4A350;
-            border: none;
-            border-radius: 12px;
-            color: #1a1a18;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        .search-btn:hover {
-            background: #c99340;
-            transform: translateY(-2px);
+        .info-box strong {
+            color: #FF6B6B;
         }
 
         /* Responsive */
-        @media (max-width: 640px) {
-            .container {
-                padding: 30px 15px;
-            }
-
+        @media (max-width: 600px) {
             .error-code {
-                font-size: 100px;
+                font-size: 80px;
                 margin-bottom: -10px;
             }
 
-            .lost-icon {
-                font-size: 60px;
-                margin-bottom: 20px;
-            }
-
-            .heading {
-                font-size: 26px;
-            }
-
-            .description {
-                font-size: 14px;
-                margin-bottom: 25px;
+            .lock-icon {
+                font-size: 70px;
             }
 
             .cta-buttons {
-                gap: 8px;
-            }
-
-            .btn {
-                padding: 12px 22px;
-                font-size: 13px;
-            }
-
-            .search-box {
                 flex-direction: column;
             }
-        }
-
-        /* Accessibility */
-        @media (prefers-reduced-motion: reduce) {
-            .error-code,
-            .lost-icon,
-            .heading,
-            .description,
-            .cta-buttons,
-            .search-suggestion,
-            .blob {
-                animation: none !important;
-            }
 
             .btn {
-                transition: none;
+                width: 100%;
+                justify-content: center;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Animated background blobs -->
+    <!-- Animated Background Blobs -->
     <div class="blob blob-1"></div>
     <div class="blob blob-2"></div>
     <div class="blob blob-3"></div>
 
-    <!-- Main content -->
+    <!-- Main Content -->
     <div class="container">
-        <div class="lost-icon">
-            <i class="fas fa-map-location-dot"></i>
+        <!-- Lock Icon -->
+        <div class="lock-icon">
+            <i class="fas fa-lock"></i>
         </div>
 
-        <div class="error-code">404</div>
+        <!-- Error Code -->
+        <div class="error-code">403</div>
 
-        <h1 class="heading">Oops! Lost?</h1>
+        <!-- Heading -->
+        <h1 class="heading">Access Forbidden</h1>
+
+        <!-- Description -->
         <p class="description">
-            We couldn't find the page you're looking for. It might have moved, been deleted, or you might have taken a wrong turn in our activity map.
+            Sorry, you don't have permission to access this resource. Your request has been denied by the server.
         </p>
 
+        <!-- Action Buttons -->
         <div class="cta-buttons">
             <a href="/" class="btn btn-primary">
                 <i class="fas fa-home icon-small"></i>
-                Back Home
+                Go to Home
             </a>
-            <a href="/activities" class="btn btn-secondary">
-                <i class="fas fa-compass icon-small"></i>
-                Browse Activities
+            <a href="javascript:history.back()" class="btn btn-secondary">
+                <i class="fas fa-arrow-left icon-small"></i>
+                Go Back
             </a>
         </div>
 
-        <div class="search-suggestion">
-            <p>Looking for something specific?</p>
-            <form action="/search" method="GET" class="search-box">
-                <input
-                    type="text"
-                    name="q"
-                    class="search-input"
-                    placeholder="Search activities, centers, or instructors..."
-                    required
-                >
-                <button type="submit" class="search-btn">
-                    <i class="fas fa-search"></i>
-                </button>
-            </form>
+        <!-- Info Box -->
+        <div class="info-box">
+            <p>
+                If you believe this is a mistake, please <strong>contact us</strong> or try logging in with a different account that has the necessary permissions.
+            </p>
         </div>
     </div>
-
-    <script>
-        // Smooth scroll to top on page load
-        window.addEventListener('load', () => {
-            window.scrollTo(0, 0);
-        });
-
-        // Interactive error code animation on interact
-        const errorCode = document.querySelector('.error-code');
-        if (errorCode) {
-            errorCode.addEventListener('click', () => {
-                errorCode.style.animation = 'none';
-                setTimeout(() => {
-                    errorCode.style.animation = 'slideDown 0.8s ease-out';
-                }, 10);
-            });
-        }
-
-        // Search form focus effect
-        const searchInput = document.querySelector('.search-input');
-        if (searchInput) {
-            searchInput.addEventListener('focus', () => {
-                document.querySelector('.search-suggestion').style.transform = 'scale(1.02)';
-            });
-            searchInput.addEventListener('blur', () => {
-                document.querySelector('.search-suggestion').style.transform = 'scale(1)';
-            });
-        }
-    </script>
 </body>
 </html>
