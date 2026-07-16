@@ -136,15 +136,15 @@
                                 </div>
                             @else
                                 <span class="text-xs" style="color:#c0b8b0">No review yet</span>
+                                <div class="flex gap-2 mt-2">
+                                    <button onclick="updateBookingStatus({{ $booking->id }}, 'pending')" class="booking-action-btn"
+                                        style="background:rgba(212,163,80,0.12);color:#8a6020;border:1px solid rgba(212,163,80,0.4)">
+                                        ↩ Pending
+                                    </button>
+                                    <button onclick="updateBookingStatus({{ $booking->id }}, 'cancelled')"
+                                        class="booking-action-btn cancel-btn">✕ Cancel</button>
+                                </div>
                             @endif
-                            <div class="flex gap-2 mt-2">
-                                <button onclick="updateBookingStatus({{ $booking->id }}, 'pending')" class="booking-action-btn"
-                                    style="background:rgba(212,163,80,0.12);color:#8a6020;border:1px solid rgba(212,163,80,0.4)">
-                                    ↩ Pending
-                                </button>
-                                <button onclick="updateBookingStatus({{ $booking->id }}, 'cancelled')"
-                                    class="booking-action-btn cancel-btn">✕ Cancel</button>
-                            </div>
                         </div>
                     @endforeach
                 </div>

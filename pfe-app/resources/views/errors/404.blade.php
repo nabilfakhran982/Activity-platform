@@ -22,8 +22,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
+            overflow: auto;
+            overflow-x: hidden;
             position: relative;
+            width: 100%;
+            margin: 0;
+            padding: 0;
         }
 
         /* Animated background blobs */
@@ -270,41 +274,158 @@
         }
 
         /* Responsive */
-        @media (max-width: 640px) {
+        @media (max-width: 768px) {
             .container {
-                padding: 30px 15px;
+                padding: 35px 20px;
+                max-width: 100%;
             }
 
             .error-code {
-                font-size: 100px;
-                margin-bottom: -10px;
+                font-size: clamp(80px, 20vw, 160px);
+                margin-bottom: -15px;
             }
 
             .lost-icon {
-                font-size: 60px;
-                margin-bottom: 20px;
-            }
-
-            .heading {
-                font-size: 26px;
-            }
-
-            .description {
-                font-size: 14px;
+                font-size: clamp(50px, 15vw, 80px);
                 margin-bottom: 25px;
             }
 
+            .heading {
+                font-size: clamp(20px, 6vw, 32px);
+                margin-bottom: 14px;
+            }
+
+            .description {
+                font-size: clamp(14px, 4vw, 16px);
+                margin-bottom: 30px;
+                line-height: 1.5;
+            }
+
             .cta-buttons {
-                gap: 8px;
+                gap: 10px;
+                flex-wrap: wrap;
+                justify-content: center;
             }
 
             .btn {
-                padding: 12px 22px;
-                font-size: 13px;
+                padding: 12px 24px;
+                font-size: 14px;
+                flex: 0 1 auto;
+                min-width: 140px;
             }
 
             .search-box {
                 flex-direction: column;
+                gap: 10px;
+            }
+
+            .search-input,
+            .search-btn {
+                width: 100%;
+            }
+
+            .search-suggestion {
+                margin-top: 40px;
+                padding-top: 30px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 0;
+                min-height: auto;
+            }
+
+            .container {
+                padding: 25px 15px;
+            }
+
+            .error-code {
+                font-size: clamp(70px, 18vw, 120px);
+                margin-bottom: -10px;
+            }
+
+            .lost-icon {
+                font-size: clamp(45px, 12vw, 70px);
+                margin-bottom: 20px;
+            }
+
+            .heading {
+                font-size: clamp(18px, 5vw, 26px);
+                margin-bottom: 12px;
+            }
+
+            .description {
+                font-size: clamp(13px, 3.5vw, 15px);
+                margin-bottom: 20px;
+                line-height: 1.4;
+            }
+
+            .cta-buttons {
+                gap: 8px;
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .btn {
+                padding: 11px 20px;
+                font-size: 13px;
+                width: 100%;
+                justify-content: center;
+            }
+
+            .search-suggestion {
+                margin-top: 30px;
+                padding-top: 20px;
+            }
+
+            .search-suggestion p {
+                font-size: 12px;
+            }
+
+            .search-input {
+                padding: 10px 14px;
+                font-size: 14px;
+            }
+
+            .search-btn {
+                padding: 10px 20px;
+                font-size: 13px;
+            }
+        }
+
+        @media (max-width: 320px) {
+            .container {
+                padding: 20px 12px;
+            }
+
+            .error-code {
+                font-size: 60px;
+                margin-bottom: -5px;
+            }
+
+            .lost-icon {
+                font-size: 40px;
+                margin-bottom: 15px;
+            }
+
+            .heading {
+                font-size: 18px;
+                margin-bottom: 10px;
+            }
+
+            .description {
+                font-size: 13px;
+                margin-bottom: 15px;
+            }
+
+            .btn {
+                padding: 10px 18px;
+                font-size: 12px;
+            }
+
+            .icon-small {
+                font-size: 14px;
             }
         }
 

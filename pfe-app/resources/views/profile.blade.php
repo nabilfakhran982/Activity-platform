@@ -33,6 +33,7 @@
                     <div style="display:flex;flex-direction:column;gap:14px;">
                         <div style="font-size:2.5rem;font-weight:700;color:#1a1a18;">{{ number_format($userStats['balance'] ?? 0) }}</div>
                         <p style="margin:0;color:#8a7a6a;">Available credits</p>
+                        <p style="margin:0;color:#8a7a6a;font-size:0.95rem;">Searches remaining: <span style="font-weight:700;color:#1a1a18;">{{ number_format($userStats['searches_remaining'] ?? 0) }}</span></p>
                         <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
                             <div style="font-size:0.75rem;font-weight:700;color:#8a7a6a;">Purchased</div>
                             <div style="font-size:0.75rem;font-weight:700;color:#8a7a6a;text-align:right;">Used</div>
